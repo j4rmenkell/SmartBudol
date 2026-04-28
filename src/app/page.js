@@ -1,32 +1,58 @@
-export default function HomePage() {
+import Link from "next/link";
+
+export default function LandingPage() {
   return (
-    <main className="flex flex-col items-center justify-center min-h-[80vh] p-8 space-y-8">
+    <main className="flex flex-col items-center justify-center min-h-[80vh] p-8 space-y-10">
       {/* Hero Section */}
       <div className="text-center space-y-4 max-w-2xl">
         <h1 className="text-5xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-500">
           SmartBudol
         </h1>
         <p className="text-lg text-slate-400">
-          Find the best deals across multiple platforms. Search and compare instantly!
+          Find the best deals across multiple platforms. Search, compare, and
+          save — all in one place.
         </p>
       </div>
 
-      {/* Search Bar MVP */}
-      <div className="w-full max-w-xl relative">
-        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-          <svg className="w-5 h-5 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
-          </svg>
+      {/* CTA Buttons */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <Link
+          href="/login"
+          className="px-8 py-3 text-sm font-semibold text-white bg-emerald-600 rounded-full hover:bg-emerald-700 focus:ring-4 focus:outline-none focus:ring-emerald-800 transition-colors text-center"
+        >
+          Log In
+        </Link>
+        <Link
+          href="/register"
+          className="px-8 py-3 text-sm font-semibold text-emerald-400 border border-emerald-600 rounded-full hover:bg-emerald-600/10 focus:ring-4 focus:outline-none focus:ring-emerald-800 transition-colors text-center"
+        >
+          Create Account
+        </Link>
+      </div>
+
+      {/* Feature Highlights */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-3xl w-full mt-8">
+        <div className="text-center space-y-2 p-6 rounded-2xl bg-slate-900/50 border border-slate-800">
+          <div className="text-3xl">🔍</div>
+          <h3 className="text-sm font-semibold text-slate-200">Smart Search</h3>
+          <p className="text-xs text-slate-400">
+            Search products across multiple e-commerce platforms at once.
+          </p>
         </div>
-        <input 
-          type="search" 
-          className="block w-full p-4 pl-10 text-sm text-white border border-slate-700 rounded-full bg-slate-900/50 backdrop-blur-md focus:ring-emerald-500 focus:border-emerald-500 placeholder-slate-400 shadow-xl" 
-          placeholder="Search for an item..." 
-          required 
-        />
-        <button type="submit" className="text-white absolute right-2.5 bottom-2.5 bg-emerald-600 hover:bg-emerald-700 focus:ring-4 focus:outline-none focus:ring-emerald-800 font-medium rounded-full text-sm px-4 py-2 transition-colors">
-          Search
-        </button>
+        <div className="text-center space-y-2 p-6 rounded-2xl bg-slate-900/50 border border-slate-800">
+          <div className="text-3xl">⚖️</div>
+          <h3 className="text-sm font-semibold text-slate-200">Compare Prices</h3>
+          <p className="text-xs text-slate-400">
+            Side-by-side comparison to find the best value for your money.
+          </p>
+        </div>
+        <div className="text-center space-y-2 p-6 rounded-2xl bg-slate-900/50 border border-slate-800">
+          <div className="text-3xl">💰</div>
+          <h3 className="text-sm font-semibold text-slate-200">Save More</h3>
+          <p className="text-xs text-slate-400">
+            Get notified about price drops and never miss a deal.
+          </p>
+        </div>
       </div>
     </main>
   );

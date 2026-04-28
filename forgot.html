@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Forgot Password - BudolView</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline-variant": "#bccac1",
+                        "background": "#f7f9fb",
+                        "on-secondary-fixed-variant": "#8d1600",
+                        "surface-container-highest": "#e0e3e5",
+                        "error": "#ba1a1a",
+                        "secondary-fixed": "#ffdad3",
+                        "on-primary-fixed": "#002115",
+                        "on-primary-container": "#f5fff7",
+                        "tertiary-container": "#5161ff",
+                        "primary": "#00694c",
+                        "primary-fixed": "#86f8c9",
+                        "secondary-container": "#fd5837",
+                        "on-tertiary-fixed-variant": "#001be1",
+                        "on-tertiary-container": "#fffbff",
+                        "error-container": "#ffdad6",
+                        "tertiary-fixed": "#e0e0ff",
+                        "tertiary": "#263aff",
+                        "primary-fixed-dim": "#68dbae",
+                        "on-secondary-container": "#580a00",
+                        "on-tertiary": "#ffffff",
+                        "on-primary-fixed-variant": "#00513a",
+                        "on-secondary-fixed": "#3e0500",
+                        "on-error": "#ffffff",
+                        "surface-dim": "#d8dadc",
+                        "outline": "#6d7a73",
+                        "surface-container-low": "#f2f4f6",
+                        "on-secondary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container": "#eceef0",
+                        "surface": "#f7f9fb",
+                        "secondary-fixed-dim": "#ffb4a4",
+                        "on-surface-variant": "#3d4943",
+                        "inverse-on-surface": "#eff1f3",
+                        "on-tertiary-fixed": "#000767",
+                        "on-primary": "#ffffff",
+                        "surface-container-high": "#e6e8ea",
+                        "on-error-container": "#93000a",
+                        "tertiary-fixed-dim": "#bdc2ff",
+                        "surface-tint": "#006c4e",
+                        "primary-container": "#008560",
+                        "on-background": "#191c1e",
+                        "secondary": "#b62506",
+                        "on-surface": "#191c1e",
+                        "inverse-surface": "#2d3133",
+                        "inverse-primary": "#68dbae",
+                        "surface-variant": "#e0e3e5",
+                        "surface-bright": "#f7f9fb"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope", "sans-serif"],
+                        "display": ["Manrope", "sans-serif"],
+                        "body": ["Inter", "sans-serif"],
+                        "label": ["Inter", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body min-h-screen flex flex-col antialiased">
+<!-- TopAppBar (Transactional - Hidden Navigation Links based on Semantic Shell Mandate) -->
+<header class="fixed top-0 w-full z-50 bg-[#f7f9fb]/80 backdrop-blur-lg font-['Manrope'] antialiased">
+<div class="flex justify-between items-center px-6 py-4 max-w-full">
+<div class="text-xl font-bold tracking-tight text-[#1D9E75]">
+                BudolView
+            </div>
+<div class="flex items-center gap-4">
+<button class="hover:bg-[#f2f4f6] transition-colors duration-200 rounded-full p-2 text-[#1D9E75]">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow flex items-center justify-center pt-24 pb-12 px-4 sm:px-6 lg:px-8 bg-surface">
+<!-- Center Aligned Card using Tonal Layering -->
+<div class="w-full max-w-md bg-surface-container-lowest rounded-xl p-8 sm:p-10 relative overflow-hidden">
+<!-- Subtle Glass Effect/Gradient Accent -->
+<div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-primary-container opacity-80"></div>
+<div class="text-center mb-8">
+<div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-surface-container-low mb-6">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="lock_reset">lock_reset</span>
+</div>
+<h1 class="font-display text-2xl font-bold text-on-surface mb-2 tracking-tight">Forgot Password</h1>
+<p class="font-body text-sm text-on-surface-variant">Enter your email to receive a password reset link.</p>
+</div>
+<form action="#" class="space-y-6" method="POST">
+<!-- Input Field -->
+<div>
+<label class="block text-sm font-medium text-on-surface mb-2 font-label" for="email">Email address</label>
+<div class="relative rounded-lg shadow-sm">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-on-surface-variant text-sm" data-icon="mail">mail</span>
+</div>
+<input class="block w-full pl-10 pr-3 py-3 sm:text-sm bg-surface-container-lowest text-on-surface border border-outline-variant/20 rounded-lg focus:ring-2 focus:ring-primary-fixed focus:border-primary transition-all duration-200 placeholder-on-surface-variant/50" id="email" name="email" placeholder="you@example.com" required="" type="email"/>
+</div>
+</div>
+<!-- Primary CTA -->
+<div>
+<button class="w-full flex justify-center py-3 px-4 rounded-md shadow-sm text-sm font-semibold text-on-primary bg-gradient-to-br from-primary to-primary-container hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-200" type="submit">
+                        Send Reset Link
+                    </button>
+</div>
+</form>
+<!-- Back to Login Link -->
+<div class="mt-8 text-center">
+<a class="inline-flex items-center text-sm font-medium text-primary hover:text-primary-container transition-colors duration-200 font-label" href="#">
+<span class="material-symbols-outlined text-sm mr-1" data-icon="arrow_back">arrow_back</span>
+                    Back to Login
+                </a>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="w-full py-8 mt-auto bg-[#f7f9fb] border-t border-[#1D9E75]/10 font-['Inter'] text-sm text-[#1D9E75]">
+<div class="flex flex-col md:flex-row justify-between items-center px-8 gap-4">
+<div class="text-[#3d4943]">
+                © 2024 BudolView. Curated Value.
+            </div>
+<nav class="flex gap-6">
+<a class="text-[#3d4943] hover:text-[#1D9E75] transition-colors" href="#">Terms of Service</a>
+<a class="text-[#3d4943] hover:text-[#1D9E75] transition-colors" href="#">Privacy Policy</a>
+<a class="text-[#3d4943] hover:text-[#1D9E75] transition-colors" href="#">Help Center</a>
+</nav>
+</div>
+</footer>
+</body></html>
