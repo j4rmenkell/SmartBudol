@@ -35,16 +35,27 @@ export default function ProtectedPagesLayout({ children }) {
     const supabase = getSupabaseBrowserClient();
 
     // 1. Check session on mount (catches stale bfcache pages)
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) {
         // No session → redirect to login immediately
         window.location.replace('/login');
-      } else {
-        setIsAuthed(true);
+        return;
       }
+
+      // 2. Check email verification status — getSession() alone doesn't
+      //    distinguish verified vs unverified users. A user who signed up
+      //    but never confirmed their email has a valid session but should
+      //    NOT access protected content.
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.email_confirmed_at) {
+        window.location.replace('/verify-email');
+        return;
+      }
+
+      setIsAuthed(true);
     });
 
-    // 2. Subscribe to auth state changes (catches logout from another tab)
+    // 3. Subscribe to auth state changes (catches logout from another tab)
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {

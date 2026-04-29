@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import {
@@ -10,7 +11,6 @@ import {
   HiOutlineEyeOff,
   HiOutlineUser,
   HiOutlineExclamationCircle,
-  HiOutlineCheckCircle,
   HiOutlineArrowRight,
 } from 'react-icons/hi'
 
@@ -24,9 +24,9 @@ export default function Register() {
   const [termsAccepted, setTermsAccepted] = useState(false)
   const [errors, setErrors] = useState({})
   const [serverError, setServerError] = useState('')
-  const [successMsg, setSuccessMsg] = useState('')
   const [loading, setLoading] = useState(false)
   const supabase = createClient()
+  const router = useRouter()
 
   function validate() {
     const newErrors = {}
@@ -87,17 +87,16 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setServerError('')
-    setSuccessMsg('')
 
     if (!validate()) return
 
     setLoading(true)
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: `${location.origin}/auth/callback`,
+        emailRedirectTo: `${location.origin}/auth/callback?next=/home`,
         data: { full_name: fullName.trim() },
       },
     })
@@ -106,9 +105,22 @@ export default function Register() {
 
     if (error) {
       setServerError(error.message)
-    } else {
-      setSuccessMsg('Check your email to confirm your account!')
+      return
     }
+
+    // When email confirmations are enabled and the email already exists,
+    // Supabase returns a user object with an empty identities array
+    // instead of throwing an error (to prevent email enumeration).
+    // We detect this and show a clear error message.
+    if (data?.user?.identities?.length === 0) {
+      setServerError('Registration not possible. This email may already be in use.')
+      return
+    }
+
+    // Redirect to the verify-email page. Using replace() instead of push()
+    // prevents the user from pressing "Back" to return to the registration
+    // form after successful signup.
+    router.replace('/verify-email')
   }
 
   const clearFieldError = (field) => {
@@ -141,15 +153,6 @@ export default function Register() {
             </div>
           )}
 
-          {/* Success */}
-          {successMsg && (
-            <div className="mb-5 flex items-start gap-2.5 p-3.5 rounded-lg bg-[#86f8c9]/20 border border-[#00694c]/10">
-              <HiOutlineCheckCircle className="w-5 h-5 text-[#00694c] shrink-0 mt-0.5" />
-              <p className="text-sm text-[#00694c] leading-snug">{successMsg}</p>
-            </div>
-          )}
-
-          {!successMsg && (
             <form onSubmit={handleSubmit} noValidate className="space-y-4">
               {/* Full Name */}
               <div>
@@ -322,7 +325,6 @@ export default function Register() {
                 )}
               </button>
             </form>
-          )}
 
           {/* Login CTA */}
           <p className="mt-7 text-center text-sm text-[#3d4943]">

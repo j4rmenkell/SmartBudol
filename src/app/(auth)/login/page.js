@@ -17,7 +17,6 @@ function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  // Pick up error from redirect (e.g. failed OAuth callback)
   const urlError = searchParams.get('error')
 
   function validate() {
