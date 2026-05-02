@@ -1,193 +1,199 @@
 @import "tailwindcss";
-
-@theme inline {
-  --color-outline-variant: #bccac1;
-  --color-background: #f7f9fb;
-  --color-on-secondary-fixed-variant: #8d1600;
-  --color-surface-container-highest: #e0e3e5;
-  --color-error: #ba1a1a;
-  --color-secondary-fixed: #ffdad3;
-  --color-on-primary-fixed: #002115;
-  --color-on-primary-container: #f5fff7;
-  --color-tertiary-container: #5161ff;
-  --color-primary: #00694c;
-  --color-primary-fixed: #86f8c9;
-  --color-secondary-container: #fd5837;
-  --color-on-tertiary-fixed-variant: #001be1;
-  --color-on-tertiary-container: #fffbff;
-  --color-error-container: #ffdad6;
-  --color-tertiary-fixed: #e0e0ff;
-  --color-tertiary: #263aff;
-  --color-primary-fixed-dim: #68dbae;
-  --color-on-secondary-container: #580a00;
-  --color-on-tertiary: #ffffff;
-  --color-on-primary-fixed-variant: #00513a;
-  --color-on-secondary-fixed: #3e0500;
-  --color-on-error: #ffffff;
-  --color-surface-dim: #d8dadc;
-  --color-outline: #6d7a73;
-  --color-surface-container-low: #f2f4f6;
-  --color-on-secondary: #ffffff;
-  --color-surface-container-lowest: #ffffff;
-  --color-surface-container: #eceef0;
-  --color-surface: #f7f9fb;
-  --color-secondary-fixed-dim: #ffb4a4;
-  --color-on-surface-variant: #3d4943;
-  --color-inverse-on-surface: #eff1f3;
-  --color-on-tertiary-fixed: #000767;
-  --color-on-primary: #ffffff;
-  --color-surface-container-high: #e6e8ea;
-  --color-on-error-container: #93000a;
-  --color-tertiary-fixed-dim: #bdc2ff;
-  --color-surface-tint: #006c4e;
-  --color-primary-container: #008560;
-  --color-on-background: #191c1e;
-  --color-secondary: #b62506;
-  --color-on-surface: #191c1e;
-  --color-inverse-surface: #2d3133;
-  --color-inverse-primary: #68dbae;
-  --color-surface-variant: #e0e3e5;
-  --color-surface-bright: #f7f9fb;
-  --font-headline: "Manrope", sans-serif;
-  --font-display: "Manrope", sans-serif;
-  --font-body: "Inter", sans-serif;
-  --font-label: "Inter", sans-serif;
-}
-
-@layer utilities {
-    .glass-panel {
-        @apply bg-surface-container-lowest/80 backdrop-blur-xl border border-surface-container-lowest shadow-[0_12px_40px_rgba(25,28,30,0.06)];
-    }
-    .ghost-input {
-        @apply bg-surface-container-lowest border border-outline-variant/20 rounded-lg px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary-fixed/30 transition-all duration-200;
-    }
-}
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
 
+/* ─────────────────────────────────────────────────────────
+   SmartBudol Design System Tokens
+   "Digital Concierge" — Soft Minimalism
+   This @theme block comes AFTER the shadcn import, so it
+   wins the cascade and overrides Shadcn's generic defaults.
+   ───────────────────────────────────────────────────────── */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  /* ── Background & Surface Scale ── */
+  --color-background:                #f7f9fb;
+  --color-surface:                   #f7f9fb;
+  --color-surface-bright:            #f7f9fb;
+  --color-surface-dim:               #d8dadc;
+  --color-surface-variant:           #e0e3e5;
+  --color-surface-container-lowest:  #ffffff;
+  --color-surface-container-low:     #f2f4f6;
+  --color-surface-container:         #eceef0;
+  --color-surface-container-high:    #e6e8ea;
+  --color-surface-container-highest: #e0e3e5;
+
+  /* ── Teal Primary ── */
+  --color-primary:                   #00694c;
+  --color-primary-container:         #008560;
+  --color-primary-fixed:             #86f8c9;
+  --color-primary-fixed-dim:         #68dbae;
+  --color-on-primary:                #ffffff;
+  --color-on-primary-container:      #f5fff7;
+  --color-on-primary-fixed:          #002115;
+  --color-on-primary-fixed-variant:  #00513a;
+  --color-inverse-primary:           #68dbae;
+  --color-surface-tint:              #006c4e;
+
+  /* ── Shopee Red Secondary ── */
+  --color-secondary:                 #b62506;
+  --color-secondary-container:       #fd5837;
+  --color-secondary-fixed:           #ffdad3;
+  --color-secondary-fixed-dim:       #ffb4a4;
+  --color-on-secondary:              #ffffff;
+  --color-on-secondary-container:    #580a00;
+  --color-on-secondary-fixed:        #3e0500;
+  --color-on-secondary-fixed-variant:#8d1600;
+
+  /* ── Blue Tertiary (Budol badge) ── */
+  --color-tertiary:                  #263aff;
+  --color-tertiary-container:        #5161ff;
+  --color-tertiary-fixed:            #e0e0ff;
+  --color-tertiary-fixed-dim:        #bdc2ff;
+  --color-on-tertiary:               #ffffff;
+  --color-on-tertiary-container:     #fffbff;
+  --color-on-tertiary-fixed:         #000767;
+  --color-on-tertiary-fixed-variant: #001be1;
+
+  /* ── Text & Outline ── */
+  --color-on-background:             #191c1e;
+  --color-on-surface:                #191c1e;
+  --color-on-surface-variant:        #3d4943;
+  --color-outline:                   #6d7a73;
+  --color-outline-variant:           #bccac1;
+  --color-inverse-surface:           #2d3133;
+  --color-inverse-on-surface:        #eff1f3;
+
+  /* ── Error ── */
+  --color-error:                     #ba1a1a;
+  --color-error-container:           #ffdad6;
+  --color-on-error:                  #ffffff;
+  --color-on-error-container:        #93000a;
+
+  /* ── Shadcn bridge tokens ──
+     These map the Tailwind utility names (e.g. border-border)
+     to our SmartBudol values so Shadcn-generated @apply rules work. */
+  --color-border:                    rgba(188, 202, 193, 0.5);
+  --color-input:                     rgba(188, 202, 193, 0.5);
+  --color-ring:                      #00694c;
+  --color-foreground:                #191c1e;
+  --color-card:                      #ffffff;
+  --color-card-foreground:           #191c1e;
+  --color-popover:                   #ffffff;
+  --color-popover-foreground:        #191c1e;
+  --color-muted:                     #f2f4f6;
+  --color-muted-foreground:          #3d4943;
+  --color-accent:                    #eceef0;
+  --color-accent-foreground:         #191c1e;
+  --color-destructive:               #ba1a1a;
+
+  /* ── Typography ──
+     --font-manrope and --font-inter are CSS variable names
+     injected by Next.js via the `variable` prop in layout.js  */
+  --font-sans:     var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-headline: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-display:  var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-body:     var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-label:    var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono:     ui-monospace, 'Courier New', monospace;
 }
 
+/* ─────────────────────────────────────────────────────────
+   Override Shadcn :root CSS variables → SmartBudol palette.
+   shadcn/tailwind.css maps --color-primary: var(--primary)
+   etc. Setting :root vars here (after the import) ensures
+   those mappings resolve to our teal, not Shadcn grays.
+   ───────────────────────────────────────────────────────── */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --background:              #f7f9fb;
+  --foreground:              #191c1e;
+
+  --card:                    #ffffff;
+  --card-foreground:         #191c1e;
+  --popover:                 #ffffff;
+  --popover-foreground:      #191c1e;
+
+  /* SmartBudol teal */
+  --primary:                 #00694c;
+  --primary-foreground:      #ffffff;
+
+  /* Light surface for Shadcn secondary components */
+  --secondary:               #f2f4f6;
+  --secondary-foreground:    #191c1e;
+
+  --muted:                   #f2f4f6;
+  --muted-foreground:        #3d4943;
+
+  --accent:                  #eceef0;
+  --accent-foreground:       #191c1e;
+
+  --destructive:             #ba1a1a;
+
+  /* Ghost border — semi-transparent outline-variant */
+  --border:                  rgba(188, 202, 193, 0.5);
+  --input:                   rgba(188, 202, 193, 0.5);
+  --ring:                    #00694c;
+
+  --chart-1:                 #00694c;
+  --chart-2:                 #008560;
+  --chart-3:                 #68dbae;
+  --chart-4:                 #b62506;
+  --chart-5:                 #263aff;
+
+  --radius:                  0.5rem;
+
+  --sidebar:                 #f7f9fb;
+  --sidebar-foreground:      #191c1e;
+  --sidebar-primary:         #00694c;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent:          #eceef0;
+  --sidebar-accent-foreground: #191c1e;
+  --sidebar-border:          rgba(188, 202, 193, 0.5);
+  --sidebar-ring:            #00694c;
 }
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+/* ─────────────────────────────────────────────────────────
+   Utility Classes
+   ───────────────────────────────────────────────────────── */
+@layer utilities {
+  .glass-panel {
+    background-color: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(188, 202, 193, 0.2);
+    box-shadow: 0 12px 40px rgba(25, 28, 30, 0.06);
+  }
+  .ghost-input {
+    background-color: #ffffff;
+    border: 1px solid rgba(188, 202, 193, 0.4);
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    color: #191c1e;
+    transition: all 0.2s;
+  }
+  .ghost-input::placeholder {
+    color: rgba(61, 73, 67, 0.5);
+  }
+  .ghost-input:focus {
+    outline: none;
+    border-color: #00694c;
+    box-shadow: 0 0 0 3px rgba(134, 248, 201, 0.3);
+  }
 }
 
+/* ─────────────────────────────────────────────────────────
+   Base Styles
+   ───────────────────────────────────────────────────────── */
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    background-color: #f7f9fb;
+    color: #191c1e;
+    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   }
-  html {
-    @apply font-sans;
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
   }
 }
