@@ -1,10 +1,12 @@
+// src/lib/formatters.js
+
 export function normalizeLazada(lazadaData) {
   const productsOnly = lazadaData.filter(item => item.record_type === "product");
 
   return productsOnly.map(item => {
     return {
       platform: "Lazada",
-      id: item.product_id,
+      external_id: item.product_id, // FIX: Changed from 'id' to 'external_id'
       name: item.product_name,
       url: item.product_url,
       image_url: item.media?.primary_image || "",
@@ -19,7 +21,7 @@ export function normalizeShopee(shopeeData) {
   return shopeeData.map(item => {
     return {
       platform: "Shopee",
-      id: item.item_id.toString(),
+      external_id: item.item_id.toString(), // FIX: Changed from 'id' to 'external_id'
       name: item.name,
       url: item.url,
       image_url: item.image_url || "",
