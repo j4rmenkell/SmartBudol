@@ -54,7 +54,7 @@ export default function ForgotPassword() {
 
   return (
     <main className="min-h-screen flex items-center justify-center px-4 pt-24 pb-16 bg-[#f7f9fb] relative overflow-hidden font-[family-name:var(--font-inter)]">
-      {/* Ambient blobs */}
+
       <div className="pointer-events-none absolute -top-32 -right-32 w-[600px] h-[600px] rounded-full bg-[#00694c]/[0.04] blur-[120px]" />
       <div className="pointer-events-none absolute -bottom-24 -left-24 w-[500px] h-[500px] rounded-full bg-[#263aff]/[0.03] blur-[100px]" />
 

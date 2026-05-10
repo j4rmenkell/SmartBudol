@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -11,22 +11,37 @@ export default function Navbar() {
   const pathname = usePathname();
   const [userName, setUserName] = useState('');
 
+  /**
+   * Extracts the display name from a Supabase user object.
+   * Priority: full_name metadata → email prefix → "Profile"
+   */
+  const extractDisplayName = useCallback((user) => {
+    if (!user) return '';
+    const fullName = user.user_metadata?.full_name;
+    if (fullName) return fullName;
+    return user.email?.split('@')[0] || 'Profile';
+  }, []);
+
   useEffect(() => {
+    const supabase = createClient();
+
+    // Initial fetch
     async function fetchUser() {
-      const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        // Try to get full_name, fallback to the username part of the email
-        const fullName = user.user_metadata?.full_name;
-        if (fullName) {
-          setUserName(fullName);
-        } else {
-          setUserName(user.email?.split('@')[0] || 'User');
-        }
-      }
+      setUserName(extractDisplayName(user));
     }
     fetchUser();
-  }, []);
+
+    // Subscribe to auth state changes — this fires when the session
+    // is refreshed after updateUser(), keeping the Navbar name in sync.
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUserName(extractDisplayName(session?.user ?? null));
+    });
+
+    return () => subscription.unsubscribe();
+  }, [extractDisplayName]);
 
   // Hide the main navbar on the landing page and authentication pages
   if (pathname === '/' || AUTH_ROUTES.some((route) => pathname.startsWith(route))) {
@@ -35,6 +50,9 @@ export default function Navbar() {
 
   // Helper for active link styling
   const isActive = (path) => pathname === path;
+
+  // Get user initial for the avatar badge
+  const userInitial = userName ? userName.charAt(0).toUpperCase() : '?';
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-outline-variant/30 bg-surface/80 backdrop-blur-md">
@@ -83,21 +101,19 @@ export default function Navbar() {
 
           {/* Right side - User Account Button */}
           <div className="flex items-center">
-            {userName ? (
-              <Link 
-                href="/account" 
-                className="text-sm font-medium text-on-surface hover:text-primary transition-colors focus:outline-none"
-              >
-                {userName}
-              </Link>
-            ) : (
-              <Link 
-                href="/account" 
-                className="text-sm font-medium text-on-surface hover:text-primary transition-colors focus:outline-none"
-              >
-                Account
-              </Link>
-            )}
+            <Link 
+              href="/account" 
+              className="flex items-center gap-2.5 text-sm font-medium text-on-surface hover:text-primary transition-colors focus:outline-none group"
+              aria-label="Go to account page"
+            >
+              {/* Avatar circle */}
+              <span className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary-container text-on-primary flex items-center justify-center text-xs font-bold shadow-sm group-hover:shadow-md transition-shadow">
+                {userInitial}
+              </span>
+              <span className="hidden sm:inline">
+                {userName || 'Profile'}
+              </span>
+            </Link>
           </div>
         </div>
       </div>

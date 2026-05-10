@@ -67,6 +67,8 @@ export async function updateSession(request) {
   // Determine if the user's email is verified
   const isEmailVerified = user?.email_confirmed_at != null
 
+  // Guard Redirects
+
   // ── VERIFIED user ──
   // If a fully verified user hits the landing page, standard auth pages, or
   // the verify-email page, send them straight to /home.
@@ -105,6 +107,8 @@ export async function updateSession(request) {
     return NextResponse.redirect(url)
   }
 
+
+  // Cache Control
   // Prevent the browser from caching protected and auth pages.
   // This is critical for the back-button problem: without this header,
   // the browser serves a cached (stale) version of the page when the
