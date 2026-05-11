@@ -2,8 +2,11 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
  
 export function PlatformBadge({ platform }) {
-  const isShopee = platform.toLowerCase() === 'shopee';
-  const isLazada = platform.toLowerCase() === 'lazada';
+  // NEW: Safely handle undefined/null data
+  const safePlatform = platform || ''; 
+  
+  const isShopee = safePlatform.toLowerCase() === 'shopee';
+  const isLazada = safePlatform.toLowerCase() === 'lazada';
  
   return (
     <Badge
@@ -14,7 +17,8 @@ export function PlatformBadge({ platform }) {
         !isShopee && !isLazada && 'bg-surface-container-high text-on-surface-variant',
       )}
     >
-      {platform}
+      {/* Fallback text if platform is missing */}
+      {safePlatform || 'Unknown'} 
     </Badge>
   );
 }

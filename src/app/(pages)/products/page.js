@@ -1,5 +1,6 @@
 // src/app/(pages)/products/page.js
 import { getProducts } from '@/lib/services/productService';
+import { BarChart2 } from 'lucide-react'; 
 
 // Shadcn UI Imports
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -15,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CompareButton } from '@/components/CompareButton';
 
 export default async function ProductsPage() {
   const products = await getProducts();
@@ -157,12 +159,16 @@ export default async function ProductsPage() {
                 </CardContent>
 
                 {/* Footer / Button */}
-                <CardFooter className="p-4 pt-0">
-                  <Button variant="secondary" className="w-full" asChild>
+                <CardFooter className="p-4 pt-0 flex gap-2">
+                  
+                  {/* View Deal Button */}
+                  <Button variant="secondary" className="flex-1" asChild>
                     <a href={product.url} target="_blank" rel="noopener noreferrer">
                       View Deal
                     </a>
                   </Button>
+                  <CompareButton productId={product.id} />
+                  
                 </CardFooter>
 
               </Card>

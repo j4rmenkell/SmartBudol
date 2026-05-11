@@ -46,10 +46,12 @@ export function ProductCard({ product, isBest }) {
       {/* Image */}
       <div className="relative overflow-hidden rounded-t-xl">
         <div className="absolute top-3 right-3 z-10">
-          <PlatformBadge platform={product.store} />
+          {/* Check for product.platform first, fallback to product.store */}
+          <PlatformBadge platform={product.platform || product.store} />
         </div>
+        {/* Check for product.image_url first, fallback to product.image */}
         <img
-          src={product.image}
+          src={product.image_url || product.image}
           alt={product.name}
           className="w-full h-48 object-cover bg-surface-container"
           onError={(e) => {
@@ -80,8 +82,9 @@ export function ProductCard({ product, isBest }) {
 
         <StarRating rating={product.rating} count={product.reviewCount} />
 
+        {/* Check for vendor first, fallback to seller */}
         <p className="text-xs text-on-surface-variant">
-          Seller: <span className="text-on-surface font-medium">{product.seller}</span>
+          Seller: <span className="text-on-surface font-medium">{product.vendor || product.seller}</span>
         </p>
 
         {product.location && (
@@ -91,8 +94,9 @@ export function ProductCard({ product, isBest }) {
         )}
 
         <div className="mt-auto pt-3 border-t border-outline-variant/30">
+          {/* Check for url first, fallback to storeUrl */}
           <a
-            href={product.storeUrl}
+            href={product.url || product.storeUrl}
             target="_blank"
             rel="noopener noreferrer"
             className={`flex items-center justify-center gap-2 w-full py-2.5 rounded-lg text-sm font-medium transition-colors

@@ -1,15 +1,18 @@
+'use client';
+
 import { Star, Truck } from 'lucide-react';
 import { PlatformBadge } from './PlatformBadge';
 import { formatPrice, getBestPrice } from '@/lib/utils';
 
 export function ComparisonTable({ products }) {
   const bestPrice = getBestPrice(products);
+  const bestRating = Math.max(...products.map((x) => parseFloat(x.rating) || 0));
 
   const features = [
     {
       key: 'price',
       label: 'Price',
-      icon: <span className="text-sm font-bold">₱</span>,
+      icon: '₱',
       render: (p) => (
         <span className={`font-bold text-sm ${p.price === bestPrice ? 'text-primary' : 'text-on-surface'}`}>
           {formatPrice(p.price)}
@@ -17,46 +20,44 @@ export function ComparisonTable({ products }) {
       ),
     },
     {
-      key: 'originalPrice',
-      label: 'Original Price',
-      icon: <span className="text-sm">↩</span>,
+      key: 'platform',
+      label: 'Platform',
+      icon: '🏪',
       render: (p) => (
-        <span className="text-sm text-on-surface-variant">
-          {p.originalPrice ? formatPrice(p.originalPrice) : '—'}
-        </span>
+        <span className="text-sm text-on-surface">{p.platform ?? '—'}</span>
       ),
     },
     {
       key: 'rating',
       label: 'Rating',
-      icon: <Star size={14} />,
-      render: (p) => {
-        const best = Math.max(...products.map((x) => x.rating ?? 0));
-        return (
-          <span className={`text-sm font-medium ${p.rating === best ? 'text-primary' : 'text-on-surface'}`}>
-            {p.rating ? `${p.rating} ★` : '—'}
-          </span>
-        );
-      },
-    },
-    {
-      key: 'reviews',
-      label: 'Reviews',
-      icon: <span className="text-sm">💬</span>,
+      icon: '★',
       render: (p) => (
-        <span className="text-sm text-on-surface">
-          {p.reviewCount >= 1000
-            ? (p.reviewCount / 1000).toFixed(1) + 'k'
-            : p.reviewCount}
+        <span className={`text-sm font-medium ${parseFloat(p.rating) === bestRating ? 'text-primary' : 'text-on-surface'}`}>
+          {p.rating && parseFloat(p.rating) > 0 ? `${parseFloat(p.rating).toFixed(1)} ★` : '—'}
         </span>
       ),
     },
     {
-      key: 'location',
-      label: 'Ships From',
-      icon: <Truck size={14} />,
+      key: 'vendor',
+      label: 'Seller',
+      icon: '🏷️',
       render: (p) => (
-        <span className="text-sm text-on-surface">{p.location ?? '—'}</span>
+        <span className="text-sm text-on-surface">{p.vendor ?? '—'}</span>
+      ),
+    },
+    {
+      key: 'url',
+      label: 'View Deal',
+      icon: '🔗',
+      render: (p) => (
+        <a
+          href={p.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm text-primary underline hover:opacity-80"
+        >
+          Go to store
+        </a>
       ),
     },
   ];
@@ -72,11 +73,12 @@ export function ComparisonTable({ products }) {
             {products.map((p) => (
               <th
                 key={p.id}
-                className={`px-5 py-3.5 text-xs font-semibold uppercase tracking-widest border-b border-outline-variant/30 text-center
-                  ${p.price === bestPrice ? 'text-primary' : 'text-on-surface-variant'}`}
+                className={`px-5 py-3.5 text-xs font-semibold uppercase tracking-widest border-b border-outline-variant/30 text-center ${
+                  p.price === bestPrice ? 'text-primary' : 'text-on-surface-variant'
+                }`}
               >
                 <div className="flex items-center gap-1.5 justify-center">
-                  <PlatformBadge platform={p.store} />
+                  <PlatformBadge platform={p.platform} />
                   {p.price === bestPrice && (
                     <span className="text-primary">(Best)</span>
                   )}
@@ -93,7 +95,7 @@ export function ComparisonTable({ products }) {
             >
               <td className="px-5 py-4 border-b border-outline-variant/20">
                 <div className="flex items-center gap-2 text-on-surface-variant font-medium">
-                  {feature.icon}
+                  <span className="text-sm">{feature.icon}</span>
                   {feature.label}
                 </div>
               </td>
