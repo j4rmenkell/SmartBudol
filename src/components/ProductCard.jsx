@@ -1,55 +1,30 @@
 import { Star, CheckCircle, ExternalLink } from 'lucide-react';
 import { PlatformBadge } from './PlatformBadge';
-import { formatPrice, getBestPrice } from '@/lib/utils';
+import { formatPrice, getBestPrice } from '@/lib/utils'
+import { BestDealBadge } from './BestDealBadge'; // <-- Import here
+import { StarRating } from './StarRating';;
 
-// ─────────────────────────────────────────────────────────────────────────────
-// SUB-COMPONENTS
-// ─────────────────────────────────────────────────────────────────────────────
-function BestDealBadge() {
-  return (
-    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-20">
-      <span className="flex items-center gap-1 bg-primary text-on-primary text-xs font-semibold px-3 py-1 rounded-full shadow-sm whitespace-nowrap">
-        <CheckCircle size={11} strokeWidth={2.5} />
-        Best deal
-      </span>
-    </div>
-  );
-}
-
-function StarRating({ rating, count }) {
-  if (!rating) return null;
-  return (
-    <div className="flex items-center gap-1.5">
-      <Star size={13} className="fill-amber-400 text-amber-400" strokeWidth={0} />
-      <span className="text-sm font-semibold text-on-surface">{rating}</span>
-      <span className="text-xs text-on-surface-variant">
-        ({count >= 1000 ? (count / 1000).toFixed(1) + 'k' : count})
-      </span>
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// PRODUCT CARD
-// ─────────────────────────────────────────────────────────────────────────────
 export function ProductCard({ product, isBest }) {
+  // Compute a small "Value Badge" if you want to show the score
+  // This is based on the logic used in getBestDealId
+  const displayScore = product.valueScore; 
+
   return (
     <div
-      className={`relative bg-surface-container-lowest flex flex-col overflow-visible rounded-xl transition-shadow duration-200
+      className={`relative bg-surface-container-lowest flex flex-col overflow-visible rounded-xl transition-all duration-300
         ${isBest
-          ? 'border-2 border-primary shadow-sm pt-3'
+          ? 'border-2 border-primary shadow-lg scale-[1.02] z-10 pt-3' 
           : 'border border-outline-variant/20 hover:shadow-md'
         }`}
     >
+      {/* 1. Updated Badge logic */}
       {isBest && <BestDealBadge />}
 
-      {/* Image */}
       <div className="relative overflow-hidden rounded-t-xl">
-        <div className="absolute top-3 right-3 z-10">
-          {/* Check for product.platform first, fallback to product.store */}
+        <div className="absolute top-3 right-3 z-10 flex flex-col gap-2 items-end">
           <PlatformBadge platform={product.platform || product.store} />
         </div>
-        {/* Check for product.image_url first, fallback to product.image */}
+        
         <img
           src={product.image_url || product.image}
           alt={product.name}
@@ -60,13 +35,13 @@ export function ProductCard({ product, isBest }) {
         />
       </div>
 
-      {/* Content */}
       <div className="flex flex-col gap-3 p-5 flex-1">
         <h3 className="text-sm font-semibold text-on-surface leading-snug line-clamp-2">
           {product.name}
         </h3>
 
         <div className="flex items-end gap-2">
+          {/* 2. Highlight Price ONLY if it's the Best Deal overall */}
           <span
             className={`font-extrabold tracking-tight ${isBest ? 'text-primary' : 'text-on-surface'}`}
             style={{ fontSize: '22px', lineHeight: '1' }}
@@ -80,32 +55,33 @@ export function ProductCard({ product, isBest }) {
           )}
         </div>
 
+        {/* 3. Ratings and Reviews (Crucial for the "Best Deal" algorithm) */}
         <StarRating rating={product.rating} count={product.reviewCount} />
 
-        {/* Check for vendor first, fallback to seller */}
-        <p className="text-xs text-on-surface-variant">
-          Seller: <span className="text-on-surface font-medium">{product.vendor || product.seller}</span>
-        </p>
-
-        {product.location && (
+        <div className="space-y-1">
           <p className="text-xs text-on-surface-variant">
-            Ships from: <span className="text-on-surface font-medium">{product.location}</span>
+            Seller: <span className="text-on-surface font-medium">{product.vendor || product.seller}</span>
           </p>
-        )}
+
+          {product.location && (
+            <p className="text-xs text-on-surface-variant">
+              Ships from: <span className="text-on-surface font-medium">{product.location}</span>
+            </p>
+          )}
+        </div>
 
         <div className="mt-auto pt-3 border-t border-outline-variant/30">
-          {/* Check for url first, fallback to storeUrl */}
           <a
             href={product.url || product.storeUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className={`flex items-center justify-center gap-2 w-full py-2.5 rounded-lg text-sm font-medium transition-colors
+            className={`flex items-center justify-center gap-2 w-full py-2.5 rounded-lg text-sm font-medium transition-all
               ${isBest
-                ? 'bg-primary text-on-primary hover:bg-primary-container'
+                ? 'bg-primary text-on-primary hover:bg-primary/90 shadow-md ring-2 ring-primary/20'
                 : 'border border-outline-variant/30 text-on-surface hover:border-primary hover:text-primary'
               }`}
           >
-            Go to store
+            View on {product.platform || product.store}
             <ExternalLink size={13} strokeWidth={2.5} />
           </a>
         </div>

@@ -2,19 +2,32 @@
 
 import { Star, Truck } from 'lucide-react';
 import { PlatformBadge } from './PlatformBadge';
-import { formatPrice, getBestPrice } from '@/lib/utils';
+// Update your imports to bring in the new function
+import { formatPrice, getBestDealId } from '@/lib/utils'; 
 
 export function ComparisonTable({ products }) {
-  const bestPrice = getBestPrice(products);
+  // NEW LOGIC: Get the ID of the best overall deal, not just the lowest price
+  const bestDealId = getBestDealId(products); 
   const bestRating = Math.max(...products.map((x) => parseFloat(x.rating) || 0));
 
   const features = [
+    {
+      key: 'score',
+      label: 'Value Score',
+      icon: '🎯',
+      render: (p) => (
+        <span className={`font-bold text-sm ${p.id === bestDealId ? 'text-primary' : 'text-on-surface'}`}>
+          {p.valueScore}/10 
+        </span>
+      ),
+    },
     {
       key: 'price',
       label: 'Price',
       icon: '₱',
       render: (p) => (
-        <span className={`font-bold text-sm ${p.price === bestPrice ? 'text-primary' : 'text-on-surface'}`}>
+        // Changed to check if it's the best deal, rather than best price
+        <span className={`font-bold text-sm ${p.id === bestDealId ? 'text-primary' : 'text-on-surface'}`}>
           {formatPrice(p.price)}
         </span>
       ),
@@ -73,20 +86,23 @@ export function ComparisonTable({ products }) {
             {products.map((p) => (
               <th
                 key={p.id}
+                // Updated highlight logic here
                 className={`px-5 py-3.5 text-xs font-semibold uppercase tracking-widest border-b border-outline-variant/30 text-center ${
-                  p.price === bestPrice ? 'text-primary' : 'text-on-surface-variant'
+                  p.id === bestDealId ? 'text-primary' : 'text-on-surface-variant'
                 }`}
               >
                 <div className="flex items-center gap-1.5 justify-center">
                   <PlatformBadge platform={p.platform} />
-                  {p.price === bestPrice && (
-                    <span className="text-primary">(Best)</span>
+                  {/* Updated badge logic here */}
+                  {p.id === bestDealId && (
+                    <span className="text-primary">(Best Deal)</span>
                   )}
                 </div>
               </th>
             ))}
           </tr>
         </thead>
+        {/* ... tbody remains the same ... */}
         <tbody>
           {features.map((feature, i) => (
             <tr

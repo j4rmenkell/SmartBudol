@@ -17,13 +17,16 @@ export const metadata = {
 };
 
 import Navbar from "../components/Navbar";
+import { ToastProvider } from '@/components/ui/toast';
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={`${manrope.variable} ${inter.variable} min-h-screen flex flex-col bg-[#f7f9fb] text-[#191c1e] font-sans antialiased`}>
-        <Navbar />
-        {children}
+        <ToastProvider>
+          <Navbar />
+          {children}
+        </ToastProvider>
       </body>
     </html>
   );
