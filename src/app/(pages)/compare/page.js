@@ -1,30 +1,34 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { ArrowLeft, Plus, Trash2, Bookmark } from 'lucide-react';
-import { ProductCard } from '@/components/ProductCard';
-import { ComparisonTable } from '@/components/ComparisonTable';
-import { formatPrice, getBestDealId, addValueScoresToProducts } from '@/lib/utils';
-import { createClient } from '@/lib/supabase/client'; 
-import { useToast } from '@/components/ui/toast';
+import { useEffect, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft, Plus, Trash2, Bookmark } from "lucide-react";
+import { ProductCard } from "@/components/ProductCard";
+import { ComparisonTable } from "@/components/ComparisonTable";
+import {
+  formatPrice,
+  getBestDealId,
+  addValueScoresToProducts,
+} from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
+import { useToast } from "@/components/ui/toast";
 
 export default function ComparePage() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const comparisonId = searchParams.get('comparisonId');
+  const comparisonId = searchParams.get("comparisonId");
   const { showToast } = useToast();
-  
+
   // 1. Get IDs from URL (e.g., ?ids=1,2,3)
-  const idString = searchParams.get('ids');
-  const ids = idString ? idString.split(',').filter(Boolean) : [];
+  const idString = searchParams.get("ids");
+  const ids = idString ? idString.split(",").filter(Boolean) : [];
 
   // State Management
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
-  const [comparisonTitle, setComparisonTitle] = useState('');
+  const [comparisonTitle, setComparisonTitle] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
   // 2. Fetch products from Supabase whenever the URL changes
@@ -35,26 +39,27 @@ export default function ComparePage() {
         setIsLoading(false);
         return;
       }
-      
+
       setIsLoading(true);
       const supabase = createClient();
-      
+
       try {
         const { data, error } = await supabase
-          .from('products')
-          .select('*')
-          .in('id', ids); 
-          
+          .from("products")
+          .select("*")
+          .in("id", ids);
+
         if (error) throw error;
-        
+
         // Sort data to match the order of IDs in the URL
-        const sortedData = data?.sort((a, b) => ids.indexOf(a.id.toString()) - ids.indexOf(b.id.toString()));
+        const sortedData = data?.sort(
+          (a, b) => ids.indexOf(a.id.toString()) - ids.indexOf(b.id.toString()),
+        );
         setProducts(sortedData || []);
 
         const scoredData = addValueScoresToProducts(sortedData || []);
-        
+
         setProducts(scoredData);
-        
       } catch (error) {
         console.error("Error fetching products:", error);
       } finally {
@@ -68,16 +73,16 @@ export default function ComparePage() {
   // Persist IDs to localStorage whenever they change
   useEffect(() => {
     if (ids.length > 0) {
-      localStorage.setItem('compareIds', JSON.stringify(ids));
+      localStorage.setItem("compareIds", JSON.stringify(ids));
     }
   }, [idString, ids]);
 
   // On mount, restore from localStorage if URL has no IDs
   useEffect(() => {
     if (!idString) {
-      const saved = JSON.parse(localStorage.getItem('compareIds') || '[]');
+      const saved = JSON.parse(localStorage.getItem("compareIds") || "[]");
       if (saved.length > 0) {
-        router.replace(`/compare?ids=${saved.join(',')}`);
+        router.replace(`/compare?ids=${saved.join(",")}`);
       }
     }
   }, [idString, router]);
@@ -87,7 +92,7 @@ export default function ComparePage() {
     if (ids.length > 0 && !comparisonId) {
       const newComparisonId = `cmp_${crypto.randomUUID().slice(0, 8)}`;
       router.replace(
-        `/compare?comparisonId=${newComparisonId}&ids=${ids.join(',')}`
+        `/compare?comparisonId=${newComparisonId}&ids=${ids.join(",")}`,
       );
     }
   }, [idString, comparisonId, ids, router]);
@@ -95,48 +100,70 @@ export default function ComparePage() {
   // 3. Remove a product from the comparison
   const handleRemoveProduct = (idToRemove) => {
     const newIds = ids.filter((id) => id !== idToRemove.toString());
-    localStorage.setItem('compareIds', JSON.stringify(newIds));
+    localStorage.setItem("compareIds", JSON.stringify(newIds));
     if (newIds.length > 0) {
-      router.push(`/compare?ids=${newIds.join(',')}`);
+      router.push(`/compare?ids=${newIds.join(",")}`);
     } else {
-      localStorage.removeItem('compareIds');
-      router.push('/compare');
+      localStorage.removeItem("compareIds");
+      router.push("/compare");
     }
   };
 
   // 4. Save comparison of products
+  // [Johann] Changed the Schema due to Normalization issues
+  // Rerefactor ko yung saving
   const handleSaveComparison = async (e) => {
-    e.preventDefault(); 
+    e.preventDefault();
     setIsSaving(true);
     const supabase = createClient();
 
     try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
       if (userError || !user) {
-        showToast("Please log in to save comparisons.", "error"); 
+        showToast("Please log in to save comparisons.", "error");
         setIsSaving(false);
         setIsSaveModalOpen(false);
         return;
       }
 
-      const finalTitle = comparisonTitle.trim() || `${products.length} Items Compared`;
+      const finalTitle =
+        comparisonTitle.trim() || `${products.length} Items Compared`;
 
-      const { error: insertError } = await supabase
-        .from('saved_comparisons')
+      // Create new row in saved_comparisons table
+      // Immediately get the newly created row para magamit in the
+      // comparison_items junction tabl (bind cmp_id => product_ids)
+      const { data: newComparison, error: insertError } = await supabase
+        .from("saved_comparisons")
         .insert({
           user_id: user.id,
           comparison_id: comparisonId,
-          product_ids: ids,
-          title: finalTitle
-        });
+          title: finalTitle,
+        })
+        .select() // <-- Crucial: tells Supabase to return the newly created row
+        .single();
 
       if (insertError) throw insertError;
 
+      // Map the product IDs into the junction table format
+      // Then insert to the table
+      const itemsToInsert = ids.map((productId) => ({
+        saved_comparison_id: newComparison.id,
+        product_id: productId,
+      }));
+
+      const { error: itemsError } = await supabase
+        .from("comparison_items")
+        .insert(itemsToInsert);
+
+      if (itemsError) throw itemsError;
+
       showToast("Comparison saved successfully!", "success");
       setIsSaveModalOpen(false);
-      setComparisonTitle(''); 
-      
+      setComparisonTitle("");
     } catch (error) {
       console.error("Error saving comparison:", error);
       showToast("Failed to save. Please try again.", "error");
@@ -152,24 +179,24 @@ export default function ComparePage() {
   const scoredProducts = addValueScoresToProducts(products);
 
   // 2. Calculate the best deal ID using the newly scored products
-  const bestDealId = scoredProducts.length > 0 ? getBestDealId(scoredProducts) : null;
-  
+  const bestDealId =
+    scoredProducts.length > 0 ? getBestDealId(scoredProducts) : null;
+
   const placeholdersNeeded = Math.max(0, 3 - scoredProducts.length);
 
   return (
     <div className="min-h-screen bg-background text-on-surface font-sans pb-20 md:pb-8 flex flex-col">
       <div className="max-w-5xl mx-auto w-full p-4 md:p-8 pt-8 md:pt-12 flex-grow space-y-8">
-        
         {/* --- Header Section --- */}
         <div className="space-y-2">
-          <Link 
-            href="/products" 
+          <Link
+            href="/products"
             className="inline-flex items-center gap-1.5 text-sm text-on-surface-variant hover:text-primary transition-colors font-medium"
           >
             <ArrowLeft size={14} strokeWidth={2.5} />
-            {isEmpty ? 'Browse Products' : 'Back to results'}
+            {isEmpty ? "Browse Products" : "Back to results"}
           </Link>
-          
+
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-on-surface font-headline">
@@ -198,24 +225,25 @@ export default function ComparePage() {
         {/* --- Main Content Area --- */}
         {isLoading ? (
           <div className="flex justify-center items-center min-h-[350px]">
-             <p className="text-on-surface-variant animate-pulse">Loading comparison...</p>
+            <p className="text-on-surface-variant animate-pulse">
+              Loading comparison...
+            </p>
           </div>
         ) : (
           <>
             {/* Grid Section for Cards and Placeholders */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              
               {scoredProducts.map((product) => (
                 <div key={product.id} className="relative group">
-                  <ProductCard 
-                    product={product} 
-                    isBest={product.id === bestDealId} 
+                  <ProductCard
+                    product={product}
+                    isBest={product.id === bestDealId}
                   />
-                  
+
                   {/* Remove Item Button */}
                   <button
                     onClick={() => handleRemoveProduct(product.id)}
-                    className="absolute -top-3 -right-3 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-md hover:bg-red-600 z-10 cursor-pointer" 
+                    className="absolute -top-3 -right-3 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-md hover:bg-red-600 z-10 cursor-pointer"
                     title="Remove item"
                   >
                     <Trash2 size={16} />
@@ -231,7 +259,10 @@ export default function ComparePage() {
                   className="flex flex-col items-center justify-center min-h-[350px] border-2 border-dashed border-outline-variant/60 rounded-xl bg-surface-variant/5 hover:bg-surface-variant/20 transition-all cursor-pointer group"
                 >
                   <div className="w-12 h-12 mb-3 rounded-full bg-surface-variant/40 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-                    <Plus size={24} className="text-on-surface-variant group-hover:text-primary transition-colors" />
+                    <Plus
+                      size={24}
+                      className="text-on-surface-variant group-hover:text-primary transition-colors"
+                    />
                   </div>
                   <span className="font-medium text-sm text-on-surface-variant group-hover:text-primary transition-colors">
                     Add a product
@@ -244,7 +275,8 @@ export default function ComparePage() {
             {isEmpty ? (
               <div className="mt-8 p-8 md:p-12 text-center rounded-xl border border-dashed border-outline-variant/50 bg-surface-variant/5">
                 <p className="text-on-surface-variant font-medium">
-                  Select products from the list to see their features compared side-by-side.
+                  Select products from the list to see their features compared
+                  side-by-side.
                 </p>
               </div>
             ) : (
@@ -268,12 +300,16 @@ export default function ComparePage() {
               Save Comparison
             </h3>
             <p className="text-sm text-on-surface-variant mb-6">
-              Give this comparison a name so you can easily find it later in your account.
+              Give this comparison a name so you can easily find it later in
+              your account.
             </p>
-            
+
             <form onSubmit={handleSaveComparison}>
               <div className="mb-6">
-                <label htmlFor="comparison-title" className="block text-sm font-medium text-[#191c1e] mb-1.5">
+                <label
+                  htmlFor="comparison-title"
+                  className="block text-sm font-medium text-[#191c1e] mb-1.5"
+                >
                   Comparison Name
                 </label>
                 <input
@@ -286,7 +322,7 @@ export default function ComparePage() {
                   autoFocus
                 />
               </div>
-              
+
               <div className="flex justify-end gap-3">
                 <button
                   type="button"
@@ -301,7 +337,7 @@ export default function ComparePage() {
                   disabled={isSaving}
                   className="px-5 py-2.5 rounded-lg text-white text-sm font-semibold bg-gradient-to-r from-[#00694c] to-[#008560] hover:shadow-[0_4px_16px_rgba(0,105,76,0.3)] disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2"
                 >
-                  {isSaving ? 'Saving...' : 'Save Now'}
+                  {isSaving ? "Saving..." : "Save Now"}
                 </button>
               </div>
             </form>
