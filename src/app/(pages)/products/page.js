@@ -1,13 +1,10 @@
-// src/app/(pages)/products/page.js
 import { getProducts } from '@/lib/services/productService';
-import { BarChart2 } from 'lucide-react'; 
 
 // Shadcn UI Imports
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
   Select,
@@ -113,7 +110,7 @@ export default async function ProductsPage() {
                 placeholder="Search products..." 
                 className="flex-1"
               />
-              <Button>Search</Button>
+              <Button className="bg-slate-900 text-white hover:bg-slate-800">Search</Button>
             </div>
             <p className="text-sm text-muted-foreground mt-4">
               Showing <span className="font-semibold text-foreground">{products.length}</span> results
@@ -125,14 +122,8 @@ export default async function ProductsPage() {
             {products.map((product) => (
               <Card key={`${product.platform}-${product.external_id}`} className="flex flex-col overflow-hidden group hover:shadow-md transition-all">
                 
-                {/* Image & Badge */}
-                <div className="relative aspect-square w-full bg-muted">
-                  <Badge 
-                    variant={product.platform.toLowerCase() === 'shopee' ? 'destructive' : 'default'}
-                    className={`absolute top-2 left-2 z-10 ${product.platform.toLowerCase() === 'lazada' ? 'bg-[#0f146d] hover:bg-[#0f146d]' : ''}`}
-                  >
-                    {product.platform}
-                  </Badge>
+                {/* Image (Badge Removed from here) */}
+                <div className="relative aspect-square w-full bg-slate-100 overflow-hidden">
                   <img 
                     src={product.image_url} 
                     alt={product.name} 
@@ -142,9 +133,22 @@ export default async function ProductsPage() {
 
                 {/* Content */}
                 <CardContent className="p-4 flex-grow flex flex-col">
+                  
+                  {/* Subtle Platform Tag */}
+                  <div className="mb-3">
+                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md ${
+                      product.platform.toLowerCase() === 'shopee' 
+                        ? 'bg-orange-100 text-orange-700' 
+                        : 'bg-blue-100 text-blue-700'
+                    }`}>
+                      {product.platform}
+                    </span>
+                  </div>
+
                   <h2 className="text-sm font-medium line-clamp-2 mb-2 leading-snug">
                     {product.name}
                   </h2>
+                  
                   <div className="mt-auto">
                     <div className="flex justify-between items-end mb-1">
                       <span className="text-xl font-bold">₱{product.price.toFixed(2)}</span>
@@ -158,16 +162,20 @@ export default async function ProductsPage() {
                   </div>
                 </CardContent>
 
-                {/* Footer / Button */}
-                <CardFooter className="p-4 pt-0 flex gap-2">
+                {/* Footer / Buttons */}
+                <CardFooter className="p-4 pt-0 flex gap-2 border-none border-t-0">
                   
                   {/* View Deal Button */}
-                  <Button variant="secondary" className="flex-1" asChild>
-                    <a href={product.url} target="_blank" rel="noopener noreferrer">
-                      View Deal
-                    </a>
-                  </Button>
-                  <CompareButton productId={product.id} />
+                  <a 
+                    href={product.url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className={buttonVariants({ className: "flex-1 bg-slate-900 text-white hover:bg-slate-800 hover:text-white" })}
+                  >
+                    View Deal
+                  </a>
+
+                  <CompareButton productId={product.external_id} />
                   
                 </CardFooter>
 
