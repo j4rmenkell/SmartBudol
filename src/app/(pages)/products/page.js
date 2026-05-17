@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { getProducts } from '@/lib/services/productService';
 
 // Shadcn UI Imports
