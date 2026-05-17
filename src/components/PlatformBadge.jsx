@@ -2,7 +2,6 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
  
 export function PlatformBadge({ platform }) {
-  // NEW: Safely handle undefined/null data
   const safePlatform = platform || ''; 
   
   const isShopee = safePlatform.toLowerCase() === 'shopee';
@@ -11,13 +10,14 @@ export function PlatformBadge({ platform }) {
   return (
     <Badge
       className={cn(
-        'uppercase tracking-wider text-[10px] font-bold',
-        isShopee && 'bg-[#EE4D2D] text-white border-transparent',
-        isLazada && 'bg-[#F57224] text-white border-transparent',
+        // Added rounded-full to keep that pill shape from your design doc
+        'uppercase tracking-wider text-[10px] font-bold rounded-full px-2.5 py-0.5',
+        isShopee && 'bg-[#EE4D2D] hover:bg-[#EE4D2D]/90 text-white border-transparent',
+        // Updated to #F57C00 to match DESIGN.md exactly
+        isLazada && 'bg-[#F57C00] hover:bg-[#F57C00]/90 text-white border-transparent',
         !isShopee && !isLazada && 'bg-surface-container-high text-on-surface-variant',
       )}
     >
-      {/* Fallback text if platform is missing */}
       {safePlatform || 'Unknown'} 
     </Badge>
   );

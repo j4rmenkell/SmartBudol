@@ -44,24 +44,25 @@ export default function ComparePage() {
       const supabase = createClient();
 
       try {
+        const safeIds = ids.map(id => isNaN(id) ? id : Number(id));
+
         const { data, error } = await supabase
-          .from("products")
-          .select("*")
-          .in("id", ids);
-
-        if (error) throw error;
-
-        // Sort data to match the order of IDs in the URL
-        const sortedData = data?.sort(
-          (a, b) => ids.indexOf(a.id.toString()) - ids.indexOf(b.id.toString()),
-        );
-        setProducts(sortedData || []);
-
+          .from('products')
+          .select('*')
+          .in('id', safeIds); 
+          
+        if (error) {
+          console.error("Raw Supabase Error:", error);
+          throw error;
+        }
+        
+        const sortedData = data?.sort((a, b) => ids.indexOf(a.id.toString()) - ids.indexOf(b.id.toString()));
         const scoredData = addValueScoresToProducts(sortedData || []);
-
+        
         setProducts(scoredData);
+        
       } catch (error) {
-        console.error("Error fetching products:", error);
+        console.error("Error fetching products:", error.message || JSON.stringify(error, null, 2));
       } finally {
         setIsLoading(false);
       }
@@ -88,7 +89,6 @@ export default function ComparePage() {
   }, [idString, router]);
 
   useEffect(() => {
-    // Create a comparison ID if there are products but no comparisonId yet
     if (ids.length > 0 && !comparisonId) {
       const newComparisonId = `cmp_${crypto.randomUUID().slice(0, 8)}`;
       router.replace(
@@ -109,9 +109,16 @@ export default function ComparePage() {
     }
   };
 
+  // VALIDATION 2: Check for at least 2 items before opening modal
+  const handleOpenSaveModal = () => {
+    if (ids.length < 2) {
+      showToast("Please select at least 2 products to save a comparison.", "error");
+      return;
+    }
+    setIsSaveModalOpen(true);
+  };
+
   // 4. Save comparison of products
-  // [Johann] Changed the Schema due to Normalization issues
-  // Rerefactor ko yung saving
   const handleSaveComparison = async (e) => {
     e.preventDefault();
     setIsSaving(true);
@@ -130,28 +137,57 @@ export default function ComparePage() {
         return;
       }
 
-      const finalTitle =
-        comparisonTitle.trim() || `${products.length} Items Compared`;
+      const finalTitle = comparisonTitle.trim() || `${products.length} Items Compared`;
 
-      // Create new row in saved_comparisons table
-      // Immediately get the newly created row para magamit in the
-      // comparison_items junction tabl (bind cmp_id => product_ids)
-      const { data: newComparison, error: insertError } = await supabase
+      // VALIDATION 1: Check if a comparison with this title already exists for the user
+      const { data: existingComparisons, error: fetchError } = await supabase
         .from("saved_comparisons")
-        .insert({
-          user_id: user.id,
-          comparison_id: comparisonId,
-          title: finalTitle,
-        })
-        .select() // <-- Crucial: tells Supabase to return the newly created row
-        .single();
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("title", finalTitle);
 
-      if (insertError) throw insertError;
+      if (fetchError) throw fetchError;
 
-      // Map the product IDs into the junction table format
-      // Then insert to the table
+      const existingComparison = existingComparisons?.[0];
+      let targetComparisonId;
+
+      if (existingComparison) {
+        // OVERWRITE MODE: Use the existing comparison's ID
+        targetComparisonId = existingComparison.id;
+
+        // Delete the old items associated with this comparison
+        const { error: deleteError } = await supabase
+          .from("comparison_items")
+          .delete()
+          .eq("saved_comparison_id", targetComparisonId);
+
+        if (deleteError) throw deleteError;
+        
+        // Optionally update the comparison string ID to the newest one
+        await supabase
+          .from("saved_comparisons")
+          .update({ comparison_id: comparisonId })
+          .eq("id", targetComparisonId);
+
+      } else {
+        // CREATE NEW MODE: Insert new row
+        const { data: newComparison, error: insertError } = await supabase
+          .from("saved_comparisons")
+          .insert({
+            user_id: user.id,
+            comparison_id: comparisonId,
+            title: finalTitle,
+          })
+          .select()
+          .single();
+
+        if (insertError) throw insertError;
+        targetComparisonId = newComparison.id;
+      }
+
+      // Finally, insert the currently selected products into the junction table
       const itemsToInsert = ids.map((productId) => ({
-        saved_comparison_id: newComparison.id,
+        saved_comparison_id: targetComparisonId,
         product_id: productId,
       }));
 
@@ -161,7 +197,13 @@ export default function ComparePage() {
 
       if (itemsError) throw itemsError;
 
-      showToast("Comparison saved successfully!", "success");
+      showToast(
+        existingComparison 
+          ? "Comparison updated successfully!" 
+          : "Comparison saved successfully!", 
+        "success"
+      );
+      
       setIsSaveModalOpen(false);
       setComparisonTitle("");
     } catch (error) {
@@ -212,7 +254,7 @@ export default function ComparePage() {
             {/* Save Comparison Button */}
             {!isEmpty && (
               <button
-                onClick={() => setIsSaveModalOpen(true)}
+                onClick={handleOpenSaveModal} // Updated to use validation function
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-md font-medium text-sm bg-surface-variant/20 text-on-surface border border-outline-variant hover:bg-surface-variant/40 transition-colors"
               >
                 <Bookmark size={16} />

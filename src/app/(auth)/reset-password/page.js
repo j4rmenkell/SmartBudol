@@ -54,8 +54,12 @@ export default function ResetPassword() {
       newErrors.password = 'Password must be at least 8 characters'
     } else if (!/[A-Z]/.test(password)) {
       newErrors.password = 'Include at least one uppercase letter'
+    } else if (!/[a-z]/.test(password)) {
+      newErrors.password = 'Include at least one lowercase letter'
     } else if (!/[0-9]/.test(password)) {
       newErrors.password = 'Include at least one number'
+    } else if (!/[^A-Za-z0-9]/.test(password)) {
+      newErrors.password = 'Include at least one special character'
     }
 
     if (!confirmPassword) {
