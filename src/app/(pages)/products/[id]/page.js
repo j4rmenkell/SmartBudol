@@ -8,13 +8,10 @@ import { PlatformBadge } from "@/components/PlatformBadge";
 import { Card } from "@/components/ui/card";
 
 export default async function ProductDetailsPage({ params }) {
-  // Unwrap the params Promise to get the ID
   const { id } = await params; 
 
-  // Await the Supabase client
   const supabase = await createClient();
   
-  // Fetch strictly by UUID
   const { data: product, error } = await supabase
     .from('products')
     .select('*')
@@ -26,14 +23,12 @@ export default async function ProductDetailsPage({ params }) {
     return notFound();
   }
 
-  // Formatting helpers
   const formattedPrice = new Intl.NumberFormat('en-PH', {
     style: 'currency',
     currency: 'PHP',
   }).format(product.price);
 
   return (
-    // Corrected to the true #F9F9F9 off-white background
     <div className="min-h-screen bg-[#F9F9F9] pb-20 font-[Manrope]">
       <div className="max-w-6xl mx-auto px-4 md:px-8 pt-8 space-y-8">
         
@@ -51,11 +46,11 @@ export default async function ProductDetailsPage({ params }) {
           </div>
         </div>
 
-        {/* Main Product Section - Single White Card */}
+        {/* Main Product Section */}
         <Card className="bg-white border-[0.5px] border-[#e4e4e7] shadow-none rounded-md p-6 md:p-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 items-start">
             
-            {/* Left: Product Image Container */}
+            {/* Left */}
             <div className="relative aspect-square w-full bg-[#F9F9F9] flex items-center justify-center p-8 overflow-hidden rounded-md">
               <div className="absolute top-4 left-4 flex flex-col gap-2 z-10 items-start">
                 <PlatformBadge platform={product.platform} />
@@ -68,7 +63,7 @@ export default async function ProductDetailsPage({ params }) {
               />
             </div>
 
-            {/* Right: Product Details & Actions */}
+            {/* Right */}
             <div className="flex flex-col h-full py-2">
               <div className="flex justify-between items-start gap-4 mb-3">
                 <h1 className="text-2xl md:text-[30px] font-bold text-[#1a1b22] leading-tight tracking-tight">
@@ -120,7 +115,7 @@ export default async function ProductDetailsPage({ params }) {
           </div>
         </Card>
 
-        {/* Product Specifications Table */}
+        {/* Product Table */}
         <div className="mt-12 pt-8">
           <h2 className="text-[20px] font-semibold text-[#1a1b22] mb-6 tracking-tight">Product Specifications</h2>
           <Card className="overflow-hidden bg-white border-[0.5px] border-[#e4e4e7] shadow-none rounded-md">

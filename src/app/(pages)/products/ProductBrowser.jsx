@@ -1,4 +1,3 @@
-// src/app/(pages)/products/ProductBrowser.jsx
 'use client'; 
 
 import { useState, useMemo, useEffect } from 'react';
@@ -42,7 +41,7 @@ export default function ProductBrowser({ initialProducts }) {
   }, [initialProducts]);
 
   // ==========================================
-  // SMART SEARCH LOGIC (API TRIGGER)
+  // SEARCH LOGIC
   // ==========================================
   const executeSearch = async () => {
     setActiveSearch(searchInput); 
@@ -87,7 +86,7 @@ export default function ProductBrowser({ initialProducts }) {
   };
 
   // ==========================================
-  // FILTERING & SORTING ENGINE
+  // FILTERING & SORTING
   // ==========================================
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
@@ -235,12 +234,18 @@ export default function ProductBrowser({ initialProducts }) {
                 </div>
               )}
 
-              <div className="relative aspect-square w-full bg-slate-100 overflow-hidden">
-                <img 
-                  src={product.image_url} 
-                  alt={product.name} 
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
+              <div className="relative aspect-square w-full bg-slate-100 overflow-hidden flex items-center justify-center">
+                {product.image_url && product.image_url.trim() !== "" ? (
+                  <img 
+                    src={product.image_url} 
+                    alt={product.name} 
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                ) : (
+                  <div className="text-xs text-slate-400 font-medium select-none">
+                    No Image Available
+                  </div>
+                )}
               </div>
 
               <CardContent className="p-4 flex-grow flex flex-col">
@@ -253,12 +258,12 @@ export default function ProductBrowser({ initialProducts }) {
                     {product.platform}
                   </span>
                   
-                  {/* Rating & Reviews with Lucide Star Icon */}
-                  {product.rating > 0 && (
+                  {/* Rating & Reviews */}
+                  {product.reviews_count > 0 && product.rating > 0 && (
                     <div className="flex items-center gap-1 text-[11px] font-medium text-slate-600">
                       <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
                       <span className="text-amber-600 font-bold">{product.rating}</span>
-                      <span>({product.reviews_count || 0})</span>
+                      <span className="text-slate-400">({product.reviews_count.toLocaleString()})</span>
                     </div>
                   )}
                 </div>

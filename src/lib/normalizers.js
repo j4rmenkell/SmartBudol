@@ -1,7 +1,10 @@
-function parseSalesVolume(soldString) {
-  if (!soldString) return 0;
+// src/lib/normalizers.js
+
+// Safely converts strings like "15.7K sold", "830 sold", or numeric formats into pure integers
+function parseSalesVolume(soldValue) {
+  if (soldValue === null || soldValue === undefined) return 0;
   
-  let cleanString = String(soldString).toLowerCase().replace(/sold/g, '').replace(/,/g, '').trim();
+  let cleanString = String(soldValue).toLowerCase().replace(/sold/g, '').replace(/,/g, '').trim();
   
   let multiplier = 1;
   if (cleanString.includes('k')) {
@@ -17,9 +20,15 @@ function parseSalesVolume(soldString) {
 }
 
 export function normalizeLazada(rawArray) {
-  return rawArray.map(raw => {
-    const currentPrice = parseInt(String(raw.price ?? '0').replace(/[^0-9]/g, ''), 10);
-    const origPrice = raw.originalPrice ? parseInt(String(raw.originalPrice).replace(/[^0-9]/g, ''), 10) : currentPrice;
+  if (!Array.isArray(rawArray)) return [];
+
+  // Filter out metadata nodes and only process genuine product items
+  const productOnlyArray = rawArray.filter(raw => raw.record_type === 'product' && raw.product_name);
+
+  return productOnlyArray.map(raw => {
+    // Dig into the nested object layers provided by this actor structure
+    const currentPrice = parseFloat(raw.pricing?.current_price ?? '0');
+    const origPrice = raw.pricing?.original_price ? parseFloat(raw.pricing.original_price) : currentPrice;
     
     const calculatedDiscount = origPrice > currentPrice 
       ? Math.round(((origPrice - currentPrice) / origPrice) * 100) 
@@ -27,46 +36,54 @@ export function normalizeLazada(rawArray) {
 
     return {
       platform: 'Lazada',
-      external_id: String(raw.itemId ?? raw.nid ?? Math.random()),
-      name: raw.name ?? 'Unknown Product',
-      url: raw.itemUrl ? (raw.itemUrl.startsWith('http') ? raw.itemUrl : `https://www.lazada.com.ph${raw.itemUrl}`) : '#',
-      image_url: raw.image ?? '',
-      price: currentPrice,
-      rating: raw.ratingScore ? parseFloat(Number(raw.ratingScore).toFixed(1)) : 0,
-      vendor: raw.seller?.name ?? raw.brandName ?? 'Lazada Seller',
-      original_price: origPrice,
+      external_id: String(raw.product_id ?? Math.random()),
+      name: raw.product_name,
+      url: raw.product_url ? (raw.product_url.startsWith('http') ? raw.product_url : `https:${raw.product_url}`) : '#',
+      image_url: raw.media?.primary_image ?? '',
+      price: Math.round(currentPrice),
+      original_price: Math.round(origPrice),
       discount_percentage: calculatedDiscount,
-      reviews_count: raw.review ? parseInt(String(raw.review).replace(/[^0-9]/g, ''), 10) : 0,
-      sales_volume: parseSalesVolume(raw.item_sold ?? raw.sold ?? "0"),
-      location: raw.location ?? null,
+      rating: raw.ratings?.rating_score ? parseFloat(Number(raw.ratings.rating_score).toFixed(1)) : 0,
+      reviews_count: raw.ratings?.review_count ? parseInt(String(raw.ratings.review_count).replace(/[^0-9]/g, ''), 10) : 0,
+      sales_volume: parseSalesVolume(raw.inventory?.item_sold),
+      location: raw.vendor?.location ?? null,
+      vendor: raw.vendor?.seller_name ?? 'Lazada Seller'
     };
   });
 }
 
 export function normalizeShopee(rawArray) {
-  return rawArray.map(raw => {
-    const rawPrice = raw.price ?? raw.priceMin ?? 0;
-    const currentPrice = Math.round(rawPrice / 100);
-    const origPrice = raw.originalPrice ? Math.round(raw.originalPrice / 100) : currentPrice;
+  if (!Array.isArray(rawArray)) return [];
 
+  // Exclude bad rows lacking product names
+  const validProducts = rawArray.filter(raw => raw.name && raw.name !== 'Unknown Product');
+
+  return validProducts.map(raw => {
+    // The data file proves Shopee is already giving standard values, not cents
+    const currentPrice = parseFloat(raw.price ?? '0');
+    
+    // Fall back to current price if original_price is missing or empty
+    const origPrice = raw.original_price ? parseFloat(raw.original_price) : currentPrice;
+
+    // Use source percentage if it exists, otherwise calculate manually
     const calculatedDiscount = raw.discount_pct ?? (origPrice > currentPrice 
       ? Math.round(((origPrice - currentPrice) / origPrice) * 100) 
       : 0);
 
     return {
       platform: 'Shopee',
-      external_id: String(raw.itemId ?? raw.shopid ?? raw.item_id ?? Math.random()),
-      name: raw.name ?? 'Unknown Product',
-      url: raw.itemUrl ?? raw.url ?? '#',
-      image_url: Array.isArray(raw.images) ? raw.images[0] : (raw.image ?? raw.image_url ?? ''),
-      price: currentPrice,
-      rating: raw.ratingScore ?? raw.rating ? parseFloat(Number(raw.ratingScore ?? raw.rating).toFixed(1)) : 0,
-      vendor: raw.shopName ?? raw.shop_name ?? raw.brandName ?? 'Shopee Seller',
-      original_price: origPrice,
+      external_id: String(raw.item_id ?? raw.shop_id ?? Math.random()),
+      name: raw.name,
+      url: raw.url ?? '#',
+      image_url: raw.image_url ?? '',
+      price: Math.round(currentPrice),
+      original_price: Math.round(origPrice),
       discount_percentage: calculatedDiscount,
-      reviews_count: raw.reviewCount ?? raw.cmt_count ?? raw.rating_count ?? 0,
-      sales_volume: parseSalesVolume(raw.sold ?? raw.historical_sold ?? raw.sold_count ?? "0"),
-      location: raw.location ?? raw.shop_location ?? null,
+      rating: raw.rating ? parseFloat(Number(raw.rating).toFixed(1)) : 0,
+      reviews_count: raw.rating_count ? parseInt(String(raw.rating_count).replace(/[^0-9]/g, ''), 10) : 0,
+      sales_volume: parseSalesVolume(raw.sold_count),
+      location: raw.location ?? null,
+      vendor: 'Shopee Seller'
     };
   });
 }

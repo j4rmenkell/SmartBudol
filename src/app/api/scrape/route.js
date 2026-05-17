@@ -15,32 +15,17 @@ async function fetchFromApify(actorId, payload) {
   const safeActorId = actorId.replace('/', '~');
   const url = `https://api.apify.com/v2/acts/${safeActorId}/run-sync-get-dataset-items?token=${token}`;
 
-  // 🛡️ Give the scraper up to 60 seconds to execute before timing out
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 60000); 
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload), 
+  });
 
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-      signal: controller.signal // Connects the abort trigger to this fetch
-    });
-
-    clearTimeout(timeoutId); // Clear timeout if it succeeds in time
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Apify error (${response.status}): ${errorText}`);
-    }
-    return await response.json();
-  } catch (error) {
-    clearTimeout(timeoutId);
-    if (error.name === 'AbortError') {
-      throw new Error("Apify request timed out. The marketplaces took too long to respond.");
-    }
-    throw error;
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Apify error (${response.status}): ${errorText}`);
   }
+  return await response.json();
 }
 
 export async function POST(request) {
@@ -48,7 +33,9 @@ export async function POST(request) {
     const body = await request.json();
     const searchQuery = body.searchQuery || "Keyboard";
 
-    console.log(`Starting Live Scrape for: ${searchQuery}`);
+    console.log(`\n🚀 ==================================================`);
+    console.log(`STARTING LIVE SCRAPE FOR: "${searchQuery}"`);
+    console.log(`==================================================`);
 
     const lazadaPayload = {
       country: "ph",
@@ -65,11 +52,31 @@ export async function POST(request) {
 
     // 1. Fetch live data from Apify
     const [rawLazada, rawShopee] = await Promise.all([
-      fetchFromApify(LAZADA_ACTOR_ID, lazadaPayload).catch((e) => { console.error("Lazada failed:", e); return []; }),
-      fetchFromApify(SHOPEE_ACTOR_ID, shopeePayload).catch((e) => { console.error("Shopee failed:", e); return []; })
+      fetchFromApify(LAZADA_ACTOR_ID, lazadaPayload).catch((e) => { console.error("Lazada fetch failed:", e); return []; }),
+      fetchFromApify(SHOPEE_ACTOR_ID, shopeePayload).catch((e) => { console.error("Shopee fetch failed:", e); return []; })
     ]);
 
-    // 2. Normalize and enforce the hard limit locally
+    // 🔬 CHECKPOINT: LAZADA TRANSLATION ANALYSIS
+    console.log(`\n🔍 [LAZADA DATA TRACKER]`);
+    const cleanLazadaData = normalizeLazada(rawLazada);
+    if (cleanLazadaData.length > 0) {
+      console.log("--- CLEAN FIRST PRODUCT TRANSLATED ---");
+      console.log(JSON.stringify(cleanLazadaData[0], null, 2));
+    } else {
+      console.log("❌ No valid product rows processed for Lazada.");
+    }
+    // 🔬 CHECKPOINT: SHOPEE TRANSLATION ANALYSIS
+    console.log(`\n🔍 [SHOPEE DATA TRACKER]`);
+    const cleanShopeeData = normalizeShopee(rawShopee);
+    if (cleanShopeeData.length > 0) {
+      console.log("--- CLEAN FIRST PRODUCT TRANSLATED ---");
+      console.log(JSON.stringify(cleanShopeeData[0], null, 2));
+    } else {
+      console.log("❌ No valid product rows processed for Shopee.");
+    }
+    console.log(`\n==================================================\n`);
+
+    // 2. Normalize full arrays and enforce hard limit locally
     const cleanLazada = normalizeLazada(rawLazada).slice(0, MAX_RESULTS_LIMIT);
     const cleanShopee = normalizeShopee(rawShopee).slice(0, MAX_RESULTS_LIMIT);
 
@@ -89,7 +96,7 @@ export async function POST(request) {
 
     return NextResponse.json({ 
       success: true, 
-      message: `Successfully scraped and cached ${allProducts.length} items from PH marketplaces!`,
+      message: `Successfully scraped and cached ${allProducts.length} items!`,
     });
 
   } catch (err) {
