@@ -1,6 +1,3 @@
-// src/lib/normalizers.js
-
-// Safely converts strings like "15.7K sold", "830 sold", or numeric formats into pure integers
 function parseSalesVolume(soldValue) {
   if (soldValue === null || soldValue === undefined) return 0;
   
@@ -22,11 +19,9 @@ function parseSalesVolume(soldValue) {
 export function normalizeLazada(rawArray) {
   if (!Array.isArray(rawArray)) return [];
 
-  // Filter out metadata nodes and only process genuine product items
   const productOnlyArray = rawArray.filter(raw => raw.record_type === 'product' && raw.product_name);
 
   return productOnlyArray.map(raw => {
-    // Dig into the nested object layers provided by this actor structure
     const currentPrice = parseFloat(raw.pricing?.current_price ?? '0');
     const origPrice = raw.pricing?.original_price ? parseFloat(raw.pricing.original_price) : currentPrice;
     
@@ -55,17 +50,13 @@ export function normalizeLazada(rawArray) {
 export function normalizeShopee(rawArray) {
   if (!Array.isArray(rawArray)) return [];
 
-  // Exclude bad rows lacking product names
   const validProducts = rawArray.filter(raw => raw.name && raw.name !== 'Unknown Product');
 
   return validProducts.map(raw => {
-    // The data file proves Shopee is already giving standard values, not cents
     const currentPrice = parseFloat(raw.price ?? '0');
     
-    // Fall back to current price if original_price is missing or empty
     const origPrice = raw.original_price ? parseFloat(raw.original_price) : currentPrice;
 
-    // Use source percentage if it exists, otherwise calculate manually
     const calculatedDiscount = raw.discount_pct ?? (origPrice > currentPrice 
       ? Math.round(((origPrice - currentPrice) / origPrice) * 100) 
       : 0);

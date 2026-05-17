@@ -1,4 +1,3 @@
-// src/app/api/scrape/route.js
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { normalizeLazada, normalizeShopee } from '@/lib/normalizers';
@@ -50,13 +49,11 @@ export async function POST(request) {
       maxProducts: MAX_RESULTS_LIMIT
     };
 
-    // 1. Fetch live data from Apify
     const [rawLazada, rawShopee] = await Promise.all([
       fetchFromApify(LAZADA_ACTOR_ID, lazadaPayload).catch((e) => { console.error("Lazada fetch failed:", e); return []; }),
       fetchFromApify(SHOPEE_ACTOR_ID, shopeePayload).catch((e) => { console.error("Shopee fetch failed:", e); return []; })
     ]);
 
-    // 🔬 CHECKPOINT: LAZADA TRANSLATION ANALYSIS
     console.log(`\n🔍 [LAZADA DATA TRACKER]`);
     const cleanLazadaData = normalizeLazada(rawLazada);
     if (cleanLazadaData.length > 0) {
@@ -65,7 +62,7 @@ export async function POST(request) {
     } else {
       console.log("❌ No valid product rows processed for Lazada.");
     }
-    // 🔬 CHECKPOINT: SHOPEE TRANSLATION ANALYSIS
+
     console.log(`\n🔍 [SHOPEE DATA TRACKER]`);
     const cleanShopeeData = normalizeShopee(rawShopee);
     if (cleanShopeeData.length > 0) {
@@ -76,7 +73,6 @@ export async function POST(request) {
     }
     console.log(`\n==================================================\n`);
 
-    // 2. Normalize full arrays and enforce hard limit locally
     const cleanLazada = normalizeLazada(rawLazada).slice(0, MAX_RESULTS_LIMIT);
     const cleanShopee = normalizeShopee(rawShopee).slice(0, MAX_RESULTS_LIMIT);
 
@@ -86,7 +82,6 @@ export async function POST(request) {
       return NextResponse.json({ success: false, message: "No products found." }, { status: 404 });
     }
 
-    // 3. Cache immediately into Supabase
     const supabase = await createClient();
     const { error } = await supabase
       .from('products')
