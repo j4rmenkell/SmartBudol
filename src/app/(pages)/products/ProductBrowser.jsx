@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
 
 // Shadcn UI Imports
@@ -302,15 +303,15 @@ export default function ProductBrowser({ initialProducts }) {
               </CardContent>
 
               <CardFooter className="p-4 pt-0 flex gap-2 border-none border-t-0">
-                <a 
-                  href={product.url} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className={buttonVariants({ className: "flex-1 bg-slate-900 text-white hover:bg-slate-800 hover:text-white" })}
+                <Link 
+                  href={`/products/${product.id}`} 
+                  className={buttonVariants({ 
+                    className: "flex-1 bg-[#00694c] text-white hover:bg-[#008560] hover:text-white transition-colors" 
+                  })}
                 >
-                  View Deal
-                </a>
-                <CompareButton productId={product.external_id} />
+                  View Details
+                </Link>
+                <CompareButton productId={product.id} />
               </CardFooter>
 
             </Card>

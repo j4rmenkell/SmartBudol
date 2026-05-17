@@ -44,24 +44,32 @@ export default function ComparePage() {
       const supabase = createClient();
 
       try {
+        // FIX 1: Safely convert string IDs to numbers if they are numeric.
+        // If your database uses UUIDs (letters/dashes), this safely leaves them as strings.
+        const safeIds = ids.map(id => isNaN(id) ? id : Number(id));
+
         const { data, error } = await supabase
-          .from("products")
-          .select("*")
-          .in("id", ids);
-
-        if (error) throw error;
-
+          .from('products')
+          .select('*')
+          .in('id', safeIds); 
+          
+        if (error) {
+          // This captures the raw Supabase error before it gets swallowed
+          console.error("Raw Supabase Error:", error);
+          throw error;
+        }
+        
         // Sort data to match the order of IDs in the URL
-        const sortedData = data?.sort(
-          (a, b) => ids.indexOf(a.id.toString()) - ids.indexOf(b.id.toString()),
-        );
-        setProducts(sortedData || []);
-
+        const sortedData = data?.sort((a, b) => ids.indexOf(a.id.toString()) - ids.indexOf(b.id.toString()));
+        
+        // Ensure we are adding the scores before saving to state!
         const scoredData = addValueScoresToProducts(sortedData || []);
-
+        
         setProducts(scoredData);
+        
       } catch (error) {
-        console.error("Error fetching products:", error);
+        // FIX 2: Force Next.js to print the actual error message or stringify the object
+        console.error("Error fetching products:", error.message || JSON.stringify(error, null, 2));
       } finally {
         setIsLoading(false);
       }
