@@ -1,7 +1,7 @@
 // src/app/api/scrape/route.js
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { normalizeLazada, normalizeShopee } from '@/lib/formatters';
+import { normalizeLazada, normalizeShopee } from '@/lib/normalizers';
 
 const MAX_RESULTS_LIMIT = 10; 
 
@@ -13,22 +13,34 @@ async function fetchFromApify(actorId, payload) {
   if (!token) throw new Error("APIFY_API_TOKEN is missing in .env.local");
 
   const safeActorId = actorId.replace('/', '~');
-  
-  // THE FIX: Added "-items" to the very end of the URL right before the ?
   const url = `https://api.apify.com/v2/acts/${safeActorId}/run-sync-get-dataset-items?token=${token}`;
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload), 
-  });
+  // 🛡️ Give the scraper up to 60 seconds to execute before timing out
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 60000); 
 
-  // Upgraded error logging so Apify tells us EXACTLY what is wrong if it fails
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Apify error (${response.status}): ${errorText}`);
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      signal: controller.signal // Connects the abort trigger to this fetch
+    });
+
+    clearTimeout(timeoutId); // Clear timeout if it succeeds in time
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Apify error (${response.status}): ${errorText}`);
+    }
+    return await response.json();
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error.name === 'AbortError') {
+      throw new Error("Apify request timed out. The marketplaces took too long to respond.");
+    }
+    throw error;
   }
-  return await response.json();
 }
 
 export async function POST(request) {

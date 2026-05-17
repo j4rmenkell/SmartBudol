@@ -1,14 +1,14 @@
-'use client'; // This tells Next.js this file can use State and listen to Clicks!
+// src/app/(pages)/products/ProductBrowser.jsx
+'use client'; 
 
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Star, MapPin } from 'lucide-react'; 
 
 // Shadcn UI Imports
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import {
   Select,
@@ -18,8 +18,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CompareButton } from '@/components/CompareButton';
-
-const CATEGORIES = ['Keyboard', 'Mouse', 'Monitor', 'Headset'];
 
 export default function ProductBrowser({ initialProducts }) {
   const router = useRouter();
@@ -37,9 +35,7 @@ export default function ProductBrowser({ initialProducts }) {
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [stores, setStores] = useState({ Lazada: true, Shopee: true });
-  const [selectedCategories, setSelectedCategories] = useState([]);
 
-  // Automatically update local state if the Server fetches new data (after Apify finishes)
   useEffect(() => {
     setProducts(initialProducts);
   }, [initialProducts]);
@@ -48,15 +44,20 @@ export default function ProductBrowser({ initialProducts }) {
   // SMART SEARCH LOGIC (API TRIGGER)
   // ==========================================
   const executeSearch = async () => {
-    setActiveSearch(searchInput); // Applies local filter immediately
+    setActiveSearch(searchInput); 
 
-    // Check if we have any local results for this search
     const localMatches = products.filter(p => 
       p.name.toLowerCase().includes(searchInput.toLowerCase())
     );
 
-    // IF EMPTY: Trigger Apify!
     if (localMatches.length === 0 && searchInput.trim() !== "") {
+      const ENABLE_LIVE_SCRAPING = true; 
+      
+      if (!ENABLE_LIVE_SCRAPING) {
+        alert("Live scraping is currently disabled to save our Apify credits! 💸 \n\nPlease search for something we already have in the database.");
+        return; 
+      }
+
       setIsScraping(true);
       try {
         const res = await fetch('/api/scrape', {
@@ -66,7 +67,6 @@ export default function ProductBrowser({ initialProducts }) {
         });
 
         if (res.ok) {
-          // Tell Next.js to silently reload the Server Component to grab the new DB items!
           router.refresh(); 
         }
       } catch (error) {
@@ -81,12 +81,8 @@ export default function ProductBrowser({ initialProducts }) {
     if (e.key === 'Enter') executeSearch();
   };
 
-  const toggleCategory = (category) => {
-    setSelectedCategories(prev => 
-      prev.includes(category) 
-        ? prev.filter(c => c !== category) 
-        : [...prev, category]
-    );
+  const toggleStore = (storeName) => {
+    setStores(prev => ({ ...prev, [storeName]: !prev[storeName] }));
   };
 
   // ==========================================
@@ -94,25 +90,11 @@ export default function ProductBrowser({ initialProducts }) {
   // ==========================================
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
-      // 1. Store Filter
       if (p.platform === 'Lazada' && !stores.Lazada) return false;
       if (p.platform === 'Shopee' && !stores.Shopee) return false;
-
-      // 2. Search Filter
       if (activeSearch && !p.name.toLowerCase().includes(activeSearch.toLowerCase())) return false;
-
-      // 3. Price Filter
       if (minPrice && p.price < Number(minPrice)) return false;
       if (maxPrice && p.price > Number(maxPrice)) return false;
-
-      // 4. Category Filter
-      if (selectedCategories.length > 0) {
-        const matchesCategory = selectedCategories.some(cat => 
-          p.name.toLowerCase().includes(cat.toLowerCase())
-        );
-        if (!matchesCategory) return false;
-      }
-
       return true;
     }).sort((a, b) => {
       if (sortOrder === 'price-asc') return a.price - b.price;
@@ -120,7 +102,7 @@ export default function ProductBrowser({ initialProducts }) {
       if (sortOrder === 'rating') return b.rating - a.rating;
       return 0;
     });
-  }, [products, activeSearch, stores, minPrice, maxPrice, selectedCategories, sortOrder]);
+  }, [products, activeSearch, stores, minPrice, maxPrice, sortOrder]);
 
 
   return (
@@ -129,95 +111,79 @@ export default function ProductBrowser({ initialProducts }) {
       {/* =========================================
           LEFT COLUMN: SIDEBAR FILTERS
       ========================================= */}
-      <aside className="w-full md:w-64 flex-shrink-0">
-        <Card className="p-6">
-          <h2 className="text-lg font-bold mb-6">Filter by</h2>
+      <aside className="w-full md:w-56 flex-shrink-0">
+        <Card className="p-4 sticky top-4">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-bold">Filters</h2>
+            <span className="text-[11px] font-medium text-slate-400">{filteredProducts.length} items</span>
+          </div>
 
           {/* Sort By */}
-          <div className="mb-6">
-            <label className="block text-sm font-semibold mb-2">Sort By</label>
+          <div>
+            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Sort By</label>
             <Select value={sortOrder} onValueChange={setSortOrder}>
-              <SelectTrigger>
+              <SelectTrigger className="w-full h-8 text-xs capitalize">
                 <SelectValue placeholder="Sort order" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="default">Default</SelectItem>
-                <SelectItem value="price-asc">Price: Low to High</SelectItem>
-                <SelectItem value="price-desc">Price: High to Low</SelectItem>
-                <SelectItem value="rating">Highest Rated</SelectItem>
+                <SelectItem value="default" className="text-xs capitalize">Default</SelectItem>
+                <SelectItem value="price-asc" className="text-xs">Price: Low to High</SelectItem>
+                <SelectItem value="price-desc" className="text-xs">Price: High to Low</SelectItem>
+                <SelectItem value="rating" className="text-xs">Highest Rated</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          <Separator className="my-6" />
+          <Separator className="my-3" />
 
           {/* Price Range */}
-          <div className="mb-6">
-            <label className="block text-sm font-semibold mb-2">Price Range</label>
+          <div>
+            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Price Range</label>
             <div className="flex items-center gap-2">
               <Input 
                 type="number" 
                 placeholder="Min ₱" 
                 value={minPrice}
                 onChange={(e) => setMinPrice(e.target.value)}
+                className="h-8 text-xs w-full"
               />
-              <span className="text-muted-foreground">-</span>
+              <span className="text-slate-300">-</span>
               <Input 
                 type="number" 
                 placeholder="Max ₱" 
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(e.target.value)}
+                className="h-8 text-xs w-full"
               />
             </div>
           </div>
 
-          <Separator className="my-6" />
+          <Separator className="my-3" />
 
           {/* Store Filter */}
-          <div className="mb-6">
-            <label className="block text-sm font-semibold mb-3">Store</label>
-            <div className="space-y-3">
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="store-lazada" 
-                  checked={stores.Lazada} 
-                  onCheckedChange={(checked) => setStores(prev => ({ ...prev, Lazada: checked }))} 
-                />
-                <label htmlFor="store-lazada" className="text-sm font-medium leading-none cursor-pointer">
-                  Lazada
-                </label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="store-shopee" 
-                  checked={stores.Shopee} 
-                  onCheckedChange={(checked) => setStores(prev => ({ ...prev, Shopee: checked }))}
-                />
-                <label htmlFor="store-shopee" className="text-sm font-medium leading-none cursor-pointer">
-                  Shopee
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <Separator className="my-6" />
-
-          {/* Category Filter */}
           <div>
-            <label className="block text-sm font-semibold mb-3">Category</label>
-            <div className="space-y-3">
-              {CATEGORIES.map((category) => (
-                <div key={category} className="flex items-center space-x-2">
-                  <Checkbox 
-                    id={`cat-${category}`} 
-                    checked={selectedCategories.includes(category)}
-                    onCheckedChange={() => toggleCategory(category)}
-                  />
-                  <label htmlFor={`cat-${category}`} className="text-sm font-medium leading-none cursor-pointer">
-                    {category}
-                  </label>
-                </div>
-              ))}
+            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Store</label>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => toggleStore('Lazada')}
+                className={`flex-1 py-1.5 text-[11px] font-bold rounded-md border transition-all ${
+                  stores.Lazada 
+                    ? 'bg-blue-50 text-blue-700 border-blue-200' 
+                    : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                Lazada
+              </button>
+              <button 
+                onClick={() => toggleStore('Shopee')}
+                className={`flex-1 py-1.5 text-[11px] font-bold rounded-md border transition-all ${
+                  stores.Shopee 
+                    ? 'bg-orange-50 text-orange-600 border-orange-200' 
+                    : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                Shopee
+              </button>
             </div>
           </div>
         </Card>
@@ -233,38 +199,41 @@ export default function ProductBrowser({ initialProducts }) {
           <div className="flex gap-2">
             <Input 
               type="text" 
-              placeholder="Search products..." 
-              className="flex-1"
+              placeholder="Search for gaming mice, mechanical keyboards..." 
+              className="flex-1 h-11"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               onKeyDown={handleKeyDown}
             />
-            <Button onClick={executeSearch} className="bg-slate-900 text-white hover:bg-slate-800">
+            <Button onClick={executeSearch} className="h-11 px-8 bg-slate-900 text-white hover:bg-slate-800">
               Search
             </Button>
           </div>
 
           {/* APIFY LOADING NOTIFICATION */}
           {isScraping && (
-            <div className="mt-4 p-4 bg-blue-50 text-blue-700 rounded-lg flex items-center gap-3 border border-blue-200 animate-in fade-in slide-in-from-top-2">
+            <div className="mt-4 p-4 bg-blue-50 text-blue-700 rounded-lg flex items-center gap-3 border border-blue-200 animate-in fade-in slide-in-from-top-2 shadow-sm">
               <Loader2 className="animate-spin h-5 w-5" />
               <p className="text-sm font-medium">
                 No local results for "<strong>{searchInput}</strong>". Deploying Apify scrapers to Lazada & Shopee... <br/>
-                <span className="text-xs font-normal">This usually takes about 30-60 seconds. Do not refresh the page.</span>
+                <span className="text-xs text-blue-600/80 font-normal">This usually takes about 30-60 seconds. Do not refresh the page.</span>
               </p>
             </div>
           )}
-
-          <p className="text-sm text-muted-foreground mt-4">
-            Showing <span className="font-semibold text-foreground">{filteredProducts.length}</span> results
-          </p>
         </div>
 
         {/* Product Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProducts.map((product) => (
-            <Card key={`${product.platform}-${product.external_id}`} className="flex flex-col overflow-hidden group hover:shadow-md transition-all">
+            <Card key={`${product.platform}-${product.external_id}`} className="flex flex-col overflow-hidden group hover:shadow-md transition-all relative">
               
+              {/* Discount Badge */}
+              {product.discount_percentage > 0 && (
+                <div className="absolute top-2 right-2 z-10 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-sm shadow-sm">
+                  -{product.discount_percentage}%
+                </div>
+              )}
+
               <div className="relative aspect-square w-full bg-slate-100 overflow-hidden">
                 <img 
                   src={product.image_url} 
@@ -274,7 +243,7 @@ export default function ProductBrowser({ initialProducts }) {
               </div>
 
               <CardContent className="p-4 flex-grow flex flex-col">
-                <div className="mb-3">
+                <div className="mb-2 flex justify-between items-start">
                   <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md ${
                     product.platform.toLowerCase() === 'shopee' 
                       ? 'bg-orange-100 text-orange-700' 
@@ -282,6 +251,15 @@ export default function ProductBrowser({ initialProducts }) {
                   }`}>
                     {product.platform}
                   </span>
+                  
+                  {/* Rating & Reviews with Lucide Star Icon */}
+                  {product.rating > 0 && (
+                    <div className="flex items-center gap-1 text-[11px] font-medium text-slate-600">
+                      <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                      <span className="text-amber-600 font-bold">{product.rating}</span>
+                      <span>({product.reviews_count || 0})</span>
+                    </div>
+                  )}
                 </div>
 
                 <h2 className="text-sm font-medium line-clamp-2 mb-2 leading-snug">
@@ -289,15 +267,27 @@ export default function ProductBrowser({ initialProducts }) {
                 </h2>
                 
                 <div className="mt-auto">
-                  <div className="flex justify-between items-end mb-1">
-                    <span className="text-xl font-bold">₱{product.price.toFixed(2)}</span>
-                    {product.rating > 0 && (
-                      <span className="text-xs font-semibold text-amber-500">★ {product.rating}</span>
+                  <div className="flex items-end gap-2 mb-2">
+                    <span className="text-xl font-bold text-slate-900">₱{product.price?.toLocaleString()}</span>
+                    {product.original_price > product.price && (
+                      <span className="text-xs text-slate-400 line-through mb-1">
+                        ₱{product.original_price?.toLocaleString()}
+                      </span>
                     )}
                   </div>
-                  <p className="text-[11px] text-muted-foreground line-clamp-1">
-                    Store: {product.vendor}
-                  </p>
+                  
+                  {/* Location & Sales Data with Lucide MapPin Icon */}
+                  <div className="flex justify-between items-center text-[10px] text-muted-foreground mt-1 min-h-[16px]">
+                    <span className="line-clamp-1 truncate max-w-[60%] flex items-center">
+                      {product.location && (
+                        <>
+                          <MapPin className="w-3 h-3 mr-1 text-slate-400" />
+                          {product.location}
+                        </>
+                      )}
+                    </span>
+                    <span>{product.sales_volume > 0 ? `${product.sales_volume.toLocaleString()} sold` : ''}</span>
+                  </div>
                 </div>
               </CardContent>
 
