@@ -1190,14 +1190,12 @@ export function FavoritesCard({ date, product, onDelete }) {
       </div>
 
       {/* Assuming you want to link out to the external product URL since it's in the schema */}
-      <a
-        href={product.url || "#"}
-        target={product.url ? "_blank" : "_self"}
-        rel="noopener noreferrer"
+      <Link
+        href={`/products/${product.id}`}
         className="w-full py-2.5 border border-primary text-primary rounded-lg text-sm font-medium hover:bg-primary/5 transition-colors flex items-center justify-center gap-2"
       >
         View Detail
-      </a>
+      </Link>
     </div>
   );
 }
