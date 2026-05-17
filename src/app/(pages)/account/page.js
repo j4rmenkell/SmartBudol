@@ -223,22 +223,8 @@ export default function AccountPage() {
             SmartBudol
           </span>
           <span className="opacity-70">
-            © 2024 SmartBudol. Finding the best value for savvy shoppers.
+            © 2026 SmartBudol. Finding the best value for savvy shoppers.
           </span>
-        </div>
-        <div className="flex gap-4 opacity-80">
-          <Link href="#" className="hover:text-primary transition-colors">
-            Privacy Policy
-          </Link>
-          <Link href="#" className="hover:text-primary transition-colors">
-            Terms of Service
-          </Link>
-          <Link href="#" className="hover:text-primary transition-colors">
-            Contact Us
-          </Link>
-          <Link href="#" className="hover:text-primary transition-colors">
-            About
-          </Link>
         </div>
       </footer>
     </div>
@@ -984,26 +970,180 @@ function ComparisonCard({ onDelete, comparisonId, date, title, products }) {
   );
 }
 
-function FavoritesTab() {
+export function FavoritesTab() {
+  const [savedFavorites, setSavedFavorites] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [favoriteToDelete, setFavoriteToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const { showToast } = useToast();
+
+  useEffect(() => {
+    async function getFavorites() {
+      setIsLoading(true);
+      const supabase = createClient();
+
+      try {
+        const {
+          data: { user },
+          error: authError,
+        } = await supabase.auth.getUser();
+
+        if (authError || !user) {
+          throw new Error("You must be logged in to view favorites.");
+        }
+
+        // Left join favorites with products based on the schema
+        const { data: favs, error: fetchError } = await supabase
+          .from("favorites")
+          .select(
+            `id, 
+             created_at,
+             products (
+               id,
+               name,
+               price,
+               image_url,
+               platform,
+               url
+             )
+            `,
+          )
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false });
+
+        if (fetchError) throw fetchError;
+
+        const formattedFavorites = (favs || []).map((fav) => ({
+          id: fav.id,
+          created_at: fav.created_at,
+          // Since product_id is a single reference to products table
+          product: Array.isArray(fav.products) ? fav.products[0] : fav.products,
+        }));
+
+        setSavedFavorites(formattedFavorites);
+      } catch (error) {
+        console.error("Mahiwagang error: ", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    getFavorites();
+  }, []);
+
+  // Opens the delete confirmation modal
+  const openDeleteModal = (favorite) => {
+    setFavoriteToDelete(favorite);
+    setIsDeleteModalOpen(true);
+  };
+
+  // Handle Delete Logic (called from modal confirmation)
+  const handleConfirmDelete = async () => {
+    if (!favoriteToDelete) return;
+    setIsDeleting(true);
+
+    const dbId = favoriteToDelete.id;
+    const previousFavorites = [...savedFavorites];
+    // Optimistic UI update
+    setSavedFavorites((prev) => prev.filter((fav) => fav.id !== dbId));
+
+    const supabase = createClient();
+
+    try {
+      const { error } = await supabase
+        .from("favorites")
+        .delete()
+        .eq("id", dbId);
+
+      if (error) throw error;
+
+      showToast("Removed from favorites", "success");
+    } catch (error) {
+      console.error("Error removing favorite: ", error);
+      // Revert if error occurs
+      setSavedFavorites(previousFavorites);
+      showToast("Failed to remove. Please try again.", "error");
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteModalOpen(false);
+      setFavoriteToDelete(null);
+    }
+  };
+
+  // Show a loading state while fetching
+  if (isLoading) {
+    return (
+      <div className="text-sm text-on-surface-variant">
+        Loading favorites...
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
-      <FavoritesCard
-        date="Added Nov 2, 2023"
-        title="Nintendo Switch OLED Model"
-        platform="Shopee"
-        price="₱ 14,990"
-      />
-      <FavoritesCard
-        date="Added Oct 30, 2023"
-        title="Logitech MX Master 3S Wireless Mouse"
-        platform="Lazada"
-        price="₱ 5,490"
-      />
+      {savedFavorites.length === 0 ? (
+        <p className="text-sm text-on-surface-variant">
+          No favorites saved yet.
+        </p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {savedFavorites.map((fav) => (
+            <FavoritesCard
+              key={fav.id}
+              date={`Added ${new Date(fav.created_at).toLocaleDateString()}`}
+              product={fav.product}
+              onDelete={() => openDeleteModal(fav)}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-surface-container-lowest rounded-2xl p-6 md:p-8 w-full max-w-md shadow-xl animate-in fade-in zoom-in duration-200">
+            <h3 className="text-xl font-bold text-on-surface font-headline mb-2">
+              Remove Favorite
+            </h3>
+            <p className="text-sm text-on-surface-variant mb-6">
+              Are you sure you want to remove{" "}
+              <span className="font-semibold text-on-surface">
+                &ldquo;{favoriteToDelete?.product?.name}&rdquo;
+              </span>{" "}
+              from your favorites?
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsDeleteModalOpen(false);
+                  setFavoriteToDelete(null);
+                }}
+                disabled={isDeleting}
+                className="px-5 py-2.5 rounded-lg text-sm font-medium text-on-surface-variant hover:bg-surface-container-low transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+                className="px-5 py-2.5 rounded-lg text-white text-sm font-semibold bg-gradient-to-r from-[#ba1a1a] to-[#d32f2f] hover:shadow-[0_4px_16px_rgba(186,26,26,0.3)] disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2"
+              >
+                {isDeleting ? "Removing..." : "Remove"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function FavoritesCard({ date, title, platform, price }) {
+export function FavoritesCard({ date, product, onDelete }) {
+  if (!product) return null; // Fallback in case product data is missing
+
   return (
     <div className="bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow">
       <div className="flex justify-between items-start mb-3">
@@ -1011,6 +1151,7 @@ function FavoritesCard({ date, title, platform, price }) {
           {date}
         </span>
         <button
+          onClick={onDelete}
           className="text-on-surface-variant hover:text-error transition-colors p-1"
           aria-label="Remove from favorites"
         >
@@ -1031,19 +1172,32 @@ function FavoritesCard({ date, title, platform, price }) {
           </svg>
         </button>
       </div>
-      <h3 className="font-semibold text-base leading-tight text-on-surface mb-3">
-        {title}
+
+      <h3
+        className="font-semibold text-base leading-tight text-on-surface mb-3 line-clamp-2"
+        title={product.name}
+      >
+        {product.name}
       </h3>
+
       <div className="flex gap-2 mb-4">
-        <PlatformBadge platform={platform} />
+        <PlatformBadge platform={product.platform} />
       </div>
+
       <div className="flex justify-between items-center bg-surface-container-low rounded-lg p-3 mb-4">
         <span className="text-sm text-on-surface-variant">Price</span>
-        <span className="text-sm font-bold text-primary">{price}</span>
+        <span className="text-sm font-bold text-primary">₱{product.price}</span>
       </div>
-      <button className="w-full py-2.5 border border-primary text-primary rounded-lg text-sm font-medium hover:bg-primary/5 transition-colors flex items-center justify-center gap-2">
+
+      {/* Assuming you want to link out to the external product URL since it's in the schema */}
+      <a
+        href={product.url || "#"}
+        target={product.url ? "_blank" : "_self"}
+        rel="noopener noreferrer"
+        className="w-full py-2.5 border border-primary text-primary rounded-lg text-sm font-medium hover:bg-primary/5 transition-colors flex items-center justify-center gap-2"
+      >
         View Detail
-      </button>
+      </a>
     </div>
   );
 }
