@@ -21,7 +21,7 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
-  const [termsAccepted, setTermsAccepted] = useState(false)
+
   const [errors, setErrors] = useState({})
   const [serverError, setServerError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -49,8 +49,12 @@ export default function Register() {
       newErrors.password = 'Password must be at least 8 characters'
     } else if (!/[A-Z]/.test(password)) {
       newErrors.password = 'Include at least one uppercase letter'
+    } else if (!/[a-z]/.test(password)) {
+      newErrors.password = 'Include at least one lowercase letter'
     } else if (!/[0-9]/.test(password)) {
       newErrors.password = 'Include at least one number'
+    } else if (!/[^A-Za-z0-9]/.test(password)) {
+      newErrors.password = 'Include at least one special character'
     }
 
     if (!confirmPassword) {
@@ -59,9 +63,7 @@ export default function Register() {
       newErrors.confirmPassword = 'Passwords do not match'
     }
 
-    if (!termsAccepted) {
-      newErrors.terms = 'You must accept the Terms and Conditions'
-    }
+
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -292,24 +294,7 @@ export default function Register() {
                 {errors.confirmPassword && <p className="mt-1.5 text-xs text-[#ba1a1a]">{errors.confirmPassword}</p>}
               </div>
 
-              {/* Terms */}
-              <div className="pt-1">
-                <label className="flex items-start gap-3 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    checked={termsAccepted}
-                    onChange={(e) => { setTermsAccepted(e.target.checked); clearFieldError('terms') }}
-                    className="mt-0.5 w-4 h-4 rounded border-[#bccac1] text-[#00694c] focus:ring-[#86f8c9]/30 focus:ring-offset-0 cursor-pointer"
-                  />
-                  <span className="text-sm text-[#3d4943] leading-snug">
-                    I agree to the{' '}
-                    <a href="#" className="font-medium text-[#00694c] hover:text-[#008560] underline underline-offset-2 transition-colors">
-                      Terms and Conditions
-                    </a>
-                  </span>
-                </label>
-                {errors.terms && <p className="mt-1.5 text-xs text-[#ba1a1a] pl-7">{errors.terms}</p>}
-              </div>
+
 
               {/* Submit */}
               <button
