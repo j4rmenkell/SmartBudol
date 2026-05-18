@@ -301,7 +301,7 @@ export default function ProductBrowser({ initialProducts }) {
                 <Link 
                   href={`/products/${product.id}`} 
                   className={buttonVariants({ 
-                    className: "flex-1 bg-[#00694c] text-white hover:bg-[#008560] hover:text-white transition-colors" 
+                    className: "flex-1 h-12 bg-[#00694c] text-white hover:bg-[#008560] hover:text-white transition-colors" 
                   })}
                 >
                   View Details

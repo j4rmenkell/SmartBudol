@@ -24,19 +24,38 @@ export function formatPrice(n) {
 export function addValueScoresToProducts(products) {
   if (!products || products.length === 0) return [];
 
-  const maxReviews = Math.max(...products.map(p => parseInt(p.reviewCount) || 1));
+  const maxReviews = Math.max(...products.map(p => parseInt(p.reviews_count) || 1));
+  const maxSales = Math.max(...products.map(p => parseInt(p.sales_volume) || 1));
 
   const withScores = products.map(p => {
+    // 1. Base Quality Score
     const ratingScore = (parseFloat(p.rating) || 0) / 5;
-    const volumeScore = Math.log1p(parseInt(p.reviewCount) || 0) / Math.log1p(maxReviews);
+    const reviewScore = Math.log1p(parseInt(p.reviews_count) || 0) / Math.log1p(maxReviews);
+    const salesScore = Math.log1p(parseInt(p.sales_volume) || 0) / Math.log1p(maxSales);
 
-    const qualityScore = (ratingScore * 0.7) + (volumeScore * 0.3);
-    const rawDealIndex = qualityScore / (parseFloat(p.price) || 1);
+    const volumeScore = (reviewScore * 0.4) + (salesScore * 0.6);
+    let qualityScore = (ratingScore * 0.7) + (volumeScore * 0.3);
+
+    // 2. Raw Deal Index (Using Square Root to prevent cheap-item bias)
+    const price = parseFloat(p.price) || 1;
+    let rawDealIndex = qualityScore / Math.sqrt(price);
+
+    // 3. Discount Boost
+    const discountFromField = parseFloat(p.discount_percentage) || 0;
+    const originalPrice = parseFloat(p.original_price);
+    const discountFromPrice = originalPrice > 0
+      ? ((originalPrice - price) / originalPrice) * 100
+      : 0;
+    const discount = Math.max(discountFromField, discountFromPrice);
+
+    if (discount > 0) {
+      rawDealIndex *= (1 + (discount / 100) * 0.2); 
+    }
 
     return {
       ...p,
-      valueScore: (qualityScore * 10).toFixed(1),  // displayed number (quality only)
-      rawDealIndex,                                  // used internally for best deal
+      valueScore: (qualityScore * 10).toFixed(1),
+      rawDealIndex,
     };
   });
 

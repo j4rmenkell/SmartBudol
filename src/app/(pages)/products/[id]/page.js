@@ -23,10 +23,15 @@ export default async function ProductDetailsPage({ params }) {
     return notFound();
   }
 
+  // Currency formatters
   const formattedPrice = new Intl.NumberFormat('en-PH', {
     style: 'currency',
     currency: 'PHP',
-  }).format(product.price);
+  }).format(product.price || 0);
+
+  const formattedOriginalPrice = product.original_price > 0 
+    ? new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(product.original_price)
+    : null;
 
   return (
     <div className="min-h-screen bg-[#F9F9F9] pb-20 font-[Manrope]">
@@ -53,12 +58,12 @@ export default async function ProductDetailsPage({ params }) {
             {/* Left */}
             <div className="relative aspect-square w-full bg-[#F9F9F9] flex items-center justify-center p-8 overflow-hidden rounded-md">
               <div className="absolute top-4 left-4 flex flex-col gap-2 z-10 items-start">
-                <PlatformBadge platform={product.platform} />
+                <PlatformBadge platform={product.platform || 'unknown'} />
               </div>
               
               <img 
-                src={product.image_url} 
-                alt={product.name} 
+                src={product.image_url || '/placeholder-image.png'} 
+                alt={product.name || 'Product Image'} 
                 className="w-full h-full object-contain object-center mix-blend-multiply"
               />
             </div>
@@ -67,43 +72,69 @@ export default async function ProductDetailsPage({ params }) {
             <div className="flex flex-col h-full py-2">
               <div className="flex justify-between items-start gap-4 mb-3">
                 <h1 className="text-2xl md:text-[30px] font-bold text-[#1a1b22] leading-tight tracking-tight">
-                  {product.name}
+                  {product.name || "Unknown Product"}
                 </h1>
                 <FavoriteButton productId={product.id} />
               </div>
 
-              <div className="flex items-center gap-4 text-sm mb-6">
+              {/* Dynamic Ratings, Reviews, and Sales */}
+              <div className="flex items-center gap-4 text-sm mb-6 flex-wrap">
                 <div className="flex items-center gap-1.5 font-semibold text-[#fc820c]">
                   <Star size={16} className="fill-[#fc820c]" />
-                  {product.rating > 0 ? product.rating : "No ratings"}
+                  {product.rating > 0 ? parseFloat(product.rating).toFixed(1) : "No ratings"}
                 </div>
                 <span className="text-[#dad9e3]">•</span>
-                <span className="text-[#6d7a73] font-medium">1.2k Reviews</span>
+                <span className="text-[#6d7a73] font-medium">
+                  {product.reviews_count > 0 ? `${parseInt(product.reviews_count).toLocaleString()} Reviews` : "0 Reviews"}
+                </span>
                 <span className="text-[#dad9e3]">•</span>
                 <span className="flex items-center gap-1.5 text-[#00694c] font-semibold">
-                  <Check size={14} strokeWidth={2.5} /> In Stock
+                  <Check size={14} strokeWidth={2.5} /> 
+                  {product.sales_volume > 0 ? `${parseInt(product.sales_volume).toLocaleString()}+ Sold` : "Available Now"}
                 </span>
               </div>
 
+              {/* Dynamic Pricing Block */}
               <div className="mb-8">
-                <div className="text-[24px] md:text-[32px] font-extrabold text-[#1a1b22] mb-2 tracking-tight">
-                  {formattedPrice}
+                <div className="flex items-baseline gap-3 mb-2 flex-wrap">
+                  <div className="text-[24px] md:text-[32px] font-extrabold text-[#1a1b22] tracking-tight">
+                    {product.price > 0 ? formattedPrice : "Price Unavailable"}
+                  </div>
+                  
+                  {formattedOriginalPrice && product.original_price > product.price && (
+                    <div className="text-lg text-[#6d7a73] line-through font-medium">
+                      {formattedOriginalPrice}
+                    </div>
+                  )}
+                  
+                  {product.discount_percentage > 0 && (
+                    <span className="text-sm font-bold text-[#00694c] bg-[#e6f4ea] px-2 py-1 rounded-md">
+                      -{product.discount_percentage}% OFF
+                    </span>
+                  )}
                 </div>
                 <div className="text-sm text-[#6d7a73]">
-                  Sold by <span className="font-semibold text-[#00694c]">{product.vendor}</span>
+                  Sold by <span className="font-semibold text-[#00694c]">{product.vendor || "Unknown Seller"}</span>
                 </div>
               </div>
 
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-3 mt-auto">
-                <a 
-                  href={product.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 flex items-center justify-center gap-2 bg-[#00694c] hover:bg-[#008560] text-white px-6 py-3.5 rounded-md font-semibold transition-colors"
-                >
-                  Go to store <ArrowRight size={18} />
-                </a>
+                {product.url ? (
+                  <a 
+                    href={product.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center gap-2 bg-[#00694c] hover:bg-[#008560] text-white px-6 py-3.5 rounded-md font-semibold transition-colors"
+                  >
+                    Go to store <ArrowRight size={18} />
+                  </a>
+                ) : (
+                  <div className="flex-1 flex items-center justify-center gap-2 bg-gray-300 text-gray-500 px-6 py-3.5 rounded-md font-semibold cursor-not-allowed">
+                    Link Unavailable
+                  </div>
+                )}
+                
                 <div className="flex-1">
                   <CompareButton 
                     productId={product.id} 
@@ -120,38 +151,56 @@ export default async function ProductDetailsPage({ params }) {
           <h2 className="text-[20px] font-semibold text-[#1a1b22] mb-6 tracking-tight">Product Specifications</h2>
           <Card className="overflow-hidden bg-white border-[0.5px] border-[#e4e4e7] shadow-none rounded-md">
             <div className="divide-y-[0.5px] divide-[#e4e4e7] text-sm">
+              
               <div className="grid grid-cols-3 p-4 hover:bg-[#F9F9F9] transition-colors">
                 <div className="text-[#6d7a73] font-semibold">Price</div>
-                <div className="col-span-2 font-bold text-[#1a1b22]">{formattedPrice}</div>
+                <div className="col-span-2 font-bold text-[#1a1b22]">
+                  {product.price > 0 ? formattedPrice : "Unavailable"}
+                </div>
               </div>
+
+              <div className="grid grid-cols-3 p-4 hover:bg-[#F9F9F9] transition-colors">
+                <div className="text-[#6d7a73] font-semibold">Platform</div>
+                <div className="col-span-2 font-medium text-[#1a1b22] capitalize">
+                  {product.platform || "Not specified"}
+                </div>
+              </div>
+
               <div className="grid grid-cols-3 p-4 hover:bg-[#F9F9F9] transition-colors">
                 <div className="text-[#6d7a73] font-semibold">Rating</div>
                 <div className="col-span-2 flex items-center gap-1.5 font-medium text-[#1a1b22]">
-                  {product.rating} <Star size={14} className="text-[#fc820c] fill-[#fc820c]" />
+                  {product.rating > 0 ? parseFloat(product.rating).toFixed(1) : "No ratings"} <Star size={14} className="text-[#fc820c] fill-[#fc820c]" />
                 </div>
               </div>
+
               <div className="grid grid-cols-3 p-4 hover:bg-[#F9F9F9] transition-colors">
                 <div className="text-[#6d7a73] font-semibold">Review Count</div>
-                <div className="col-span-2 text-[#3d4943]">1,204 reviews</div>
-              </div>
-              <div className="grid grid-cols-3 p-4 hover:bg-[#F9F9F9] transition-colors">
-                <div className="text-[#6d7a73] font-semibold">Free Shipping</div>
-                <div className="col-span-2 flex items-center gap-1 text-[#00694c] font-medium">
-                  <Check size={16} strokeWidth={2.5} /> Yes
+                <div className="col-span-2 text-[#3d4943]">
+                  {product.reviews_count > 0 ? `${parseInt(product.reviews_count).toLocaleString()} reviews` : "No reviews yet"}
                 </div>
               </div>
+
               <div className="grid grid-cols-3 p-4 hover:bg-[#F9F9F9] transition-colors">
-                <div className="text-[#6d7a73] font-semibold">Delivery Time</div>
-                <div className="col-span-2 text-[#3d4943]">2-3 Business Days</div>
+                <div className="text-[#6d7a73] font-semibold">Items Sold</div>
+                <div className="col-span-2 text-[#3d4943]">
+                  {product.sales_volume > 0 ? `${parseInt(product.sales_volume).toLocaleString()}+ sold` : "0 sold"}
+                </div>
               </div>
+
+              <div className="grid grid-cols-3 p-4 hover:bg-[#F9F9F9] transition-colors">
+                <div className="text-[#6d7a73] font-semibold">Ships From</div>
+                <div className="col-span-2 text-[#3d4943] capitalize">
+                  {product.location || "Not specified"}
+                </div>
+              </div>
+
               <div className="grid grid-cols-3 p-4 hover:bg-[#F9F9F9] transition-colors">
                 <div className="text-[#6d7a73] font-semibold">Seller</div>
-                <div className="col-span-2 text-[#3d4943]">{product.vendor}</div>
+                <div className="col-span-2 text-[#3d4943]">
+                  {product.vendor || "Unknown Seller"}
+                </div>
               </div>
-              <div className="grid grid-cols-3 p-4 hover:bg-[#F9F9F9] transition-colors">
-                <div className="text-[#6d7a73] font-semibold">Stock Status</div>
-                <div className="col-span-2 text-[#00694c] font-semibold">In Stock</div>
-              </div>
+
             </div>
           </Card>
         </div>

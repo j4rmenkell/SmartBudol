@@ -220,9 +220,18 @@ export default function ComparePage() {
   // 1. Dynamically calculate and attach the scores to the products in state
   const scoredProducts = addValueScoresToProducts(products);
 
-  // 2. Calculate the best deal ID using the newly scored products
-  const bestDealId =
-    scoredProducts.length > 0 ? getBestDealId(scoredProducts) : null;
+  // 2. Calculate price mismatch for the UI safeguard
+  const validPrices = scoredProducts.map((p) => parseFloat(p.price) || 0).filter((price) => price > 0);
+  const maxPrice = validPrices.length > 0 ? Math.max(...validPrices) : 0;
+  const minPrice = validPrices.length > 0 ? Math.min(...validPrices) : 0;
+  
+  // If the highest price is more than 5x the lowest, flag it
+  const isPriceMismatch = minPrice > 0 && (maxPrice / minPrice) > 5;
+
+  // 3. Calculate the best deal ID (nullified if there's a price mismatch)
+  const bestDealId = (!isPriceMismatch && scoredProducts.length > 0) 
+    ? getBestDealId(scoredProducts) 
+    : null;
 
   const placeholdersNeeded = Math.max(0, 3 - scoredProducts.length);
 
@@ -326,7 +335,11 @@ export default function ComparePage() {
                 <h2 className="text-lg font-semibold tracking-tight text-on-surface">
                   Side-by-side comparison
                 </h2>
-                <ComparisonTable products={scoredProducts} />
+                <ComparisonTable 
+                  products={scoredProducts} 
+                  bestDealId={bestDealId} 
+                  isPriceMismatch={isPriceMismatch} 
+                />
               </div>
             )}
           </>
