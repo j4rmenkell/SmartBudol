@@ -97,6 +97,16 @@ export default function Navbar() {
             >
               Compare
             </Link>
+            <Link 
+              href="/developers" 
+              className={`text-sm font-medium transition-colors border-b-2 ${
+                isActive('/developers') 
+                  ? 'border-primary text-primary' 
+                  : 'border-transparent text-on-surface hover:text-primary hover:border-primary/50'
+              }`}
+            >
+              Developers
+            </Link>
           </div>
 
           {/* Right side - User Account Button */}

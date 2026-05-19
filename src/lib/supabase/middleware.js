@@ -59,7 +59,8 @@ export async function updateSession(request) {
     request.nextUrl.pathname.startsWith('/home') ||
     request.nextUrl.pathname.startsWith('/account') || 
     request.nextUrl.pathname.startsWith('/compare') ||
-    request.nextUrl.pathname.startsWith('/products')
+    request.nextUrl.pathname.startsWith('/products') ||
+    request.nextUrl.pathname.startsWith('/developers')
 
   // Check if the user is on the public landing page
   const isLandingPage = request.nextUrl.pathname === '/'

@@ -1,7 +1,7 @@
 import { updateSession } from '@/lib/supabase/middleware'
 
 export async function proxy(request) {
-  // This calls the helper function you just built
+  // Calls the helper function you just built
   return await updateSession(request)
 }
 

@@ -158,17 +158,8 @@ export default function AccountPage() {
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="w-full max-w-4xl mx-auto p-4 md:px-8 py-6 mt-12 border-t border-outline-variant/30 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-on-surface-variant">
-        <div className="flex items-center gap-4">
-          <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary-container font-headline text-base">
-            SmartBudol
-          </span>
-          <span className="opacity-70">
-            &copy; 2026 SmartBudol. Finding the best value for savvy shoppers.
-          </span>
-        </div>
-      </footer>
+     
+      
     </div>
   );
 }
