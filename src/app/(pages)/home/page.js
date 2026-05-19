@@ -3,45 +3,58 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ContainerScroll } from '@/components/ui/container-scroll-animation';
-import { Loader2 } from 'lucide-react'; // Added for the loading spinner
+import { Loader2, Star, MapPin } from 'lucide-react'; 
 
 /* ─────────────────────────────────────────────
    SmartBudol — Home Page
    - Unified Emerald color palette
    - Upgraded typography to 'Inter' 
    - Layout: Hero -> How it works -> 3D Preview
-   - Preview buttons redirect to /products
-   - Search & Tags now trigger live scraping before redirect
+   - Search & Tags trigger live scraping before redirect
+   - Product Preview Cards matched to ProductBrowser style
 ───────────────────────────────────────────── */
 
 const TRENDING = ['earphones', 'sneakers', 'phone cases'];
 
+// Updated to match the data structure expected by the ProductBrowser cards
 const PREVIEW_PRODUCTS = [
     {
+        id: 'preview-1',
         name: 'SoundCore Liberty 4 NC Noise Cancelling Earbuds',
-        badge: 'Best deal',
-        badgeColor: '#047857',
-        shopee: '₱3,499',
-        lazada: '₱3,850',
-        best: 'shopee',
+        platform: 'Shopee',
+        price: 3499,
+        original_price: 4500,
+        discount_percentage: 22,
+        rating: 4.8,
+        reviews_count: 11200,
+        location: 'Metro Manila',
+        sales_volume: 15400,
         img: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=400&q=80',
     },
     {
+        id: 'preview-2',
         name: 'SoundCore Liberty 4 NC Active Noise Cancelling',
-        badge: 'Lazada',
-        badgeColor: '#1d4ed8',
-        shopee: '₱3,850',
-        lazada: '₱3,850',
-        best: 'lazada',
+        platform: 'Lazada',
+        price: 3850,
+        original_price: 4500,
+        discount_percentage: 14,
+        rating: 4.9,
+        reviews_count: 898,
+        location: 'Cebu',
+        sales_volume: 2100,
         img: 'https://images.unsplash.com/photo-1598331668826-20cecc596b86?w=400&q=80',
     },
     {
+        id: 'preview-3',
         name: 'SoundCore Liberty 4 NC Ultra Noise Reduction',
-        badge: 'Temu',
-        badgeColor: '#dc2626',
-        shopee: '₱4,100',
-        lazada: '₱4,100',
-        best: 'shopee',
+        platform: 'Shopee',
+        price: 4100,
+        original_price: 4500,
+        discount_percentage: 9,
+        rating: 4.2,
+        reviews_count: 42,
+        location: 'Overseas',
+        sales_volume: 150,
         img: 'https://images.unsplash.com/photo-1605464315542-bda3e2f4e605?w=400&q=80',
     },
 ];
@@ -52,7 +65,6 @@ export default function HomePage() {
     const [activeSearch, setActiveSearch] = useState('');
     const router = useRouter();
 
-    // The new function that runs the scrape, then redirects
     const runSearchAndRedirect = async (term) => {
         const trimmed = term.trim();
         if (!trimmed) return;
@@ -61,7 +73,6 @@ export default function HomePage() {
         setIsScraping(true);
 
         try {
-            // Run the Apify scraping logic in the background
             await fetch('/api/scrape', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -70,7 +81,6 @@ export default function HomePage() {
         } catch (error) {
             console.error("Scrape failed:", error);
         } finally {
-            // Once scraped (or if it fails), redirect to display the products
             router.push(`/products?q=${encodeURIComponent(trimmed)}`);
         }
     };
@@ -210,62 +220,61 @@ export default function HomePage() {
           background: #F9FAFB;
         }
 
-        /* ── Preview card (Inside 3D Scroll) ── */
+        /* ── How it works ── */
+        .how-section {
+          max-width: 1040px; margin: 0 auto;
+          padding: 60px clamp(16px, 4vw, 40px) 80px;
+          text-align: center;
+        }
+        .how-h2 {
+          font-size: clamp(24px, 3vw, 28px);
+          font-weight: 600; 
+          color: var(--text-1); 
+          letter-spacing: -0.02em;
+          margin-bottom: 48px;
+        }
+        .how-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 24px;
+        }
+        .how-card {
+          background: var(--surface); 
+          border: 1px solid var(--border);
+          border-radius: var(--r-card); 
+          padding: 40px 24px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .how-card:hover {
+          border-color: #D1D5DB;
+          box-shadow: var(--shadow-md);
+        }
+        .how-icon {
+          width: 56px; height: 56px; 
+          border-radius: 12px;
+          display: flex; align-items: center; justify-content: center;
+          margin: 0 auto 24px;
+          background-color: var(--emerald-light);
+          color: var(--emerald-dark);
+        }
+        .how-step {
+          font-size: 18px; font-weight: 600; color: var(--text-1);
+          margin-bottom: 12px; letter-spacing: -0.01em;
+        }
+        .how-desc { 
+          font-size: 14px; font-weight: 400; color: var(--text-2); 
+          line-height: 1.6; margin: 0; 
+        }
+
+        /* ── Preview Wrapper ── */
         .preview-wrap {
           width: 100%; max-width: 1000px; background: #fff;
           border-radius: 12px; overflow: hidden;
           display: flex; flex-direction: column;
           border: 1px solid var(--border);
-        }
-        .prev-topbar {
-          padding: 14px 20px; border-bottom: 1px solid #f0f0f0;
-          background: #FAFAFA; flex-shrink: 0;
-          font-size: 13px; color: var(--text-3); font-weight: 500;
-          text-align: left;
-        }
-        .prev-topbar strong { color: var(--text-1); font-weight: 600;}
-        .prev-grid {
-          display: grid; grid-template-columns: repeat(3,1fr);
-          gap: 12px; padding: 20px; text-align: left;
-        }
-        .prev-pcard {
-          border: 1px solid #E5E7EB; border-radius: 8px;
-          overflow: hidden; background: #fff;
-          display: flex; flex-direction: column;
-        }
-        .prev-img {
-          width: 100%; aspect-ratio: 1/1;
-          object-fit: cover; display: block; background: #f3f4f6;
-        }
-        .prev-body { padding: 12px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
-        .prev-badge {
-          display: inline-block; font-size: 11px; font-weight: 600;
-          padding: 4px 8px; border-radius: 4px; color: #fff; width: fit-content;
-        }
-        .prev-name {
-          font-size: 13px; font-weight: 500; color: var(--text-1);
-          line-height: 1.4;
-          display: -webkit-box; -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical; overflow: hidden;
-          margin: 0;
-        }
-        .prev-prices { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
-        .prev-prow {
-          display: flex; justify-content: space-between;
-          font-size: 12px;
-        }
-        .prev-plat { color: var(--text-3); }
-        .prev-val { font-weight: 600; color: var(--text-1); }
-        .prev-val.best { color: var(--emerald-dark); }
-        .prev-go {
-          width: 100%; padding: 8px; margin-top: auto;
-          background: var(--emerald-dark); color: #fff; border: none;
-          border-radius: 6px; font-size: 13px; font-weight: 500;
-          cursor: pointer; font-family: inherit;
-          transition: background .15s ease;
-        }
-        .prev-go:hover {
-          background: #065f46;
         }
 
         /* specs table */
@@ -319,7 +328,6 @@ export default function HomePage() {
         /* ── Responsive adjustments ── */
         @media (max-width: 768px) {
           .how-grid { grid-template-columns: 1fr; }
-          .prev-grid { grid-template-columns: 1fr 1fr; }
         }
         @media (max-width: 640px) {
           .sb-footer { flex-direction: column; text-align: center; }
@@ -364,7 +372,7 @@ export default function HomePage() {
                     <div className="mb-6 p-4 bg-[#ECFDF5] text-[#047857] rounded-lg flex items-center justify-center gap-3 border border-[#10B981] shadow-sm w-full max-w-[640px]">
                         <Loader2 className="animate-spin h-5 w-5" />
                         <p className="text-sm font-medium text-left m-0">
-                            Deploying Apify scrapers for &quot;{activeSearch}&quot;... <br/>
+                            Deploying Apify scrapers for &quot;<strong>{activeSearch}</strong>&quot;... <br/>
                             <span className="text-xs text-[#047857]/80 font-normal">This usually takes 30-60 seconds. Do not refresh.</span>
                         </p>
                     </div>
@@ -388,7 +396,58 @@ export default function HomePage() {
                 )}
             </section>
 
-            {/* 2. 3D Scroll Hero Section (Product Preview) */}
+            {/* 2. How it works Section */}
+            <section className="how-section" id="how">
+                <h2 className="how-h2">How it works</h2>
+                <div className="how-grid">
+                    {[
+                        {
+                            icon: (
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                    <path d="M9 11l2 2 4-4"></path>
+                                </svg>
+                            ),
+                            step: '1. Search',
+                            desc: 'Paste a product link or search directly. We instantly scan both platforms.',
+                        },
+                        {
+                            icon: (
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M16 3l4 4-4 4"></path>
+                                    <path d="M20 7H4"></path>
+                                    <path d="M8 21l-4-4 4-4"></path>
+                                    <path d="M4 17h16"></path>
+                                </svg>
+                            ),
+                            step: '2. Compare',
+                            desc: 'View side-by-side prices, shipping fees, and real reviews in one clean interface.',
+                        },
+                        {
+                            icon: (
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.5-1 2-2h2v-4h-2c0-1-.5-1.5-1-2h0V6c0-.5-.5-1-1-1z"></path>
+                                    <path d="M2 9v1c0 1.1.9 2 2 2h1"></path>
+                                    <path d="M16 11h.01"></path>
+                                </svg>
+                            ),
+                            step: '3. Save',
+                            desc: 'Make the smart choice. Click through to buy with confidence knowing you got the best deal.',
+                        }
+                    ].map((item) => (
+                        <div key={item.step} className="how-card">
+                            <div className="how-icon">
+                                {item.icon}
+                            </div>
+                            <h3 className="how-step">{item.step}</h3>
+                            <p className="how-desc">{item.desc}</p>
+                        </div>
+                    ))}
+                </div>
+            </section>
+
+            {/* 3. 3D Scroll Hero Section (Product Preview) */}
             <div className="flex flex-col overflow-hidden pb-[100px] pt-[20px]">
                 <ContainerScroll
                     titleComponent={
@@ -399,34 +458,82 @@ export default function HomePage() {
                         </div>
                     }
                 >
-                    {/* Product comparison preview card (Inside the 3D scroll) */}
                     <div className="preview-wrap mx-auto mt-0 h-full">
-                        <div className="prev-topbar">
+                        <div className="px-5 py-3 border-b border-gray-100 bg-gray-50 text-[13px] text-gray-500 font-medium text-left">
                             Comparing results for <strong>wireless earphones</strong>
                         </div>
 
-                        <div className="prev-grid">
-                            {PREVIEW_PRODUCTS.map((p, i) => (
-                                <div key={i} className="prev-pcard">
-                                    <img src={p.img} alt={p.name} className="prev-img" draggable={false} />
-                                    <div className="prev-body">
-                                        <span className="prev-badge" style={{ background: p.badgeColor }}>{p.badge}</span>
-                                        <p className="prev-name">{p.name}</p>
-                                        <div className="prev-prices">
-                                            <div className="prev-prow">
-                                                <span className="prev-plat">Shopee</span>
-                                                <span className={`prev-val${p.best === 'shopee' ? ' best' : ''}`}>{p.shopee}</span>
-                                            </div>
-                                            <div className="prev-prow">
-                                                <span className="prev-plat">Lazada</span>
-                                                <span className={`prev-val${p.best === 'lazada' ? ' best' : ''}`}>{p.lazada}</span>
+                        {/* NEW PRODUCT GRID MATCHING ProductBrowser.jsx */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 p-5 text-left">
+                            {PREVIEW_PRODUCTS.map((product) => (
+                                <div key={product.id} className="flex flex-col overflow-hidden group hover:shadow-md transition-all relative border border-gray-200 rounded-lg bg-white">
+                                    
+                                    {/* Discount Badge */}
+                                    {product.discount_percentage > 0 && (
+                                        <div className="absolute top-2 right-2 z-10 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-sm shadow-sm">
+                                            -{product.discount_percentage}%
+                                        </div>
+                                    )}
+
+                                    {/* Image */}
+                                    <div className="relative aspect-square w-full bg-slate-100 overflow-hidden flex items-center justify-center">
+                                        <img 
+                                            src={product.img} 
+                                            alt={product.name} 
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                            draggable={false}
+                                        />
+                                    </div>
+
+                                    {/* Card Body */}
+                                    <div className="p-4 flex-grow flex flex-col">
+                                        <div className="mb-2 flex justify-between items-start">
+                                            <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md ${
+                                                product.platform.toLowerCase() === 'shopee' 
+                                                ? 'bg-orange-100 text-orange-700' 
+                                                : 'bg-blue-100 text-blue-700'
+                                            }`}>
+                                                {product.platform}
+                                            </span>
+                                            
+                                            {/* Rating & Reviews */}
+                                            <div className="flex items-center gap-1 text-[11px] font-medium text-slate-600">
+                                                <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                                                <span className="text-amber-600 font-bold">{product.rating}</span>
+                                                <span className="text-slate-400">({product.reviews_count.toLocaleString()})</span>
                                             </div>
                                         </div>
-                                        <button
-                                            className="prev-go"
+
+                                        <h2 className="text-sm font-medium line-clamp-2 mb-2 leading-snug text-slate-900">
+                                            {product.name}
+                                        </h2>
+                                        
+                                        <div className="mt-auto">
+                                            <div className="flex items-end gap-2 mb-2">
+                                                <span className="text-xl font-bold text-slate-900">₱{product.price.toLocaleString()}</span>
+                                                <span className="text-xs text-slate-400 line-through mb-1">
+                                                    ₱{product.original_price.toLocaleString()}
+                                                </span>
+                                            </div>
+                                            
+                                            {/* Location & Sales Data */}
+                                            <div className="flex justify-between items-center text-[10px] text-slate-500 mt-1 min-h-[16px]">
+                                                <span className="line-clamp-1 truncate max-w-[60%] flex items-center">
+                                                    <MapPin className="w-3 h-3 mr-1 text-slate-400" />
+                                                    {product.location}
+                                                </span>
+                                                <span>{product.sales_volume.toLocaleString()} sold</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Card Footer / Button */}
+                                    <div className="p-4 pt-0 flex gap-2">
+                                        <button 
+                                            className="flex-1 h-10 bg-[#00694c] text-white hover:bg-[#008560] transition-colors rounded-md text-sm font-medium"
                                             onClick={() => router.push('/products')}
                                         >
-                                            Go to products →
+                                            View Product Page
                                         </button>
                                     </div>
                                 </div>
@@ -476,7 +583,7 @@ export default function HomePage() {
                 </ContainerScroll>
             </div>
 
-            {/* 3. Footer */}
+            {/* 4. Footer */}
             <footer className="sb-footer">
                 <div className="sb-footer-left">
                     <div className="sb-footer-brand">SmartBudol</div>
