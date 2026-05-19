@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ContainerScroll } from '@/components/ui/container-scroll-animation';
+import { Loader2 } from 'lucide-react'; // Added for the loading spinner
 
 /* ─────────────────────────────────────────────
    SmartBudol — Home Page
@@ -10,46 +11,10 @@ import { ContainerScroll } from '@/components/ui/container-scroll-animation';
    - Upgraded typography to 'Inter' 
    - Layout: Hero -> How it works -> 3D Preview
    - Preview buttons redirect to /products
+   - Search & Tags now trigger live scraping before redirect
 ───────────────────────────────────────────── */
 
 const TRENDING = ['earphones', 'sneakers', 'phone cases'];
-
-const HOW_IT_WORKS = [
-    {
-        icon: (
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                <path d="M9 11l2 2 4-4"></path>
-            </svg>
-        ),
-        step: '1. Search',
-        desc: 'Paste a product link or search directly. We instantly scan both platforms.',
-    },
-    {
-        icon: (
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M16 3l4 4-4 4"></path>
-                <path d="M20 7H4"></path>
-                <path d="M8 21l-4-4 4-4"></path>
-                <path d="M4 17h16"></path>
-            </svg>
-        ),
-        step: '2. Compare',
-        desc: 'View side-by-side prices, shipping fees, and real reviews in one clean interface.',
-    },
-    {
-        icon: (
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.5-1 2-2h2v-4h-2c0-1-.5-1.5-1-2h0V6c0-.5-.5-1-1-1z"></path>
-                <path d="M2 9v1c0 1.1.9 2 2 2h1"></path>
-                <path d="M16 11h.01"></path>
-            </svg>
-        ),
-        step: '3. Save',
-        desc: 'Make the smart choice. Click through to buy with confidence knowing you got the best deal.',
-    },
-];
 
 const PREVIEW_PRODUCTS = [
     {
@@ -83,17 +48,41 @@ const PREVIEW_PRODUCTS = [
 
 export default function HomePage() {
     const [query, setQuery] = useState('');
+    const [isScraping, setIsScraping] = useState(false);
+    const [activeSearch, setActiveSearch] = useState('');
     const router = useRouter();
+
+    // The new function that runs the scrape, then redirects
+    const runSearchAndRedirect = async (term) => {
+        const trimmed = term.trim();
+        if (!trimmed) return;
+        
+        setActiveSearch(trimmed);
+        setIsScraping(true);
+
+        try {
+            // Run the Apify scraping logic in the background
+            await fetch('/api/scrape', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ searchQuery: trimmed })
+            });
+        } catch (error) {
+            console.error("Scrape failed:", error);
+        } finally {
+            // Once scraped (or if it fails), redirect to display the products
+            router.push(`/products?q=${encodeURIComponent(trimmed)}`);
+        }
+    };
 
     const handleSearch = (e) => {
         e.preventDefault();
-        const trimmed = query.trim();
-        if (!trimmed) return;
-        router.push(`/products?q=${encodeURIComponent(trimmed)}`);
+        runSearchAndRedirect(query);
     };
 
     const handleTag = (tag) => {
-        router.push(`/products?q=${encodeURIComponent(tag)}`);
+        setQuery(tag);
+        runSearchAndRedirect(tag);
     };
 
     return (
@@ -171,6 +160,11 @@ export default function HomePage() {
           border-color: var(--emerald-dark);
           box-shadow: 0 0 0 3px rgba(4,120,87,.1), var(--shadow-sm);
         }
+        .sb-input:disabled {
+          background-color: #F9FAFB;
+          color: var(--text-4);
+          cursor: not-allowed;
+        }
         .sb-input::-webkit-search-cancel-button { display: none; }
         
         .sb-icon {
@@ -189,7 +183,11 @@ export default function HomePage() {
           font-size: 14px; font-weight: 500; cursor: pointer;
           transition: background .15s ease;
         }
-        .sb-btn:hover { background: #065f46; }
+        .sb-btn:hover:not(:disabled) { background: #065f46; }
+        .sb-btn:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+        }
 
         /* ── Tag chips ── */
         .tags-row {
@@ -210,55 +208,6 @@ export default function HomePage() {
           border-color: var(--text-3);
           color: var(--text-1);
           background: #F9FAFB;
-        }
-
-        /* ── How it works ── */
-        .how-section {
-          max-width: 1040px; margin: 0 auto;
-          padding: 60px clamp(16px, 4vw, 40px) 80px;
-          text-align: center;
-        }
-        .how-h2 {
-          font-size: clamp(24px, 3vw, 28px);
-          font-weight: 600; 
-          color: var(--text-1); 
-          letter-spacing: -0.02em;
-          margin-bottom: 48px;
-        }
-        .how-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 24px;
-        }
-        .how-card {
-          background: var(--surface); 
-          border: 1px solid var(--border);
-          border-radius: var(--r-card); 
-          padding: 40px 24px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        .how-card:hover {
-          border-color: #D1D5DB;
-          box-shadow: var(--shadow-md);
-        }
-        .how-icon {
-          width: 56px; height: 56px; 
-          border-radius: 12px;
-          display: flex; align-items: center; justify-content: center;
-          margin: 0 auto 24px;
-          background-color: var(--emerald-light);
-          color: var(--emerald-dark);
-        }
-        .how-step {
-          font-size: 18px; font-weight: 600; color: var(--text-1);
-          margin-bottom: 12px; letter-spacing: -0.01em;
-        }
-        .how-desc { 
-          font-size: 14px; font-weight: 400; color: var(--text-2); 
-          line-height: 1.6; margin: 0; 
         }
 
         /* ── Preview card (Inside 3D Scroll) ── */
@@ -403,43 +352,43 @@ export default function HomePage() {
                         onChange={(e) => setQuery(e.target.value)}
                         placeholder="Paste a link or search for a product..."
                         aria-label="Search for a product"
+                        disabled={isScraping}
                     />
-                    <button type="submit" className="sb-btn">Search</button>
+                    <button type="submit" className="sb-btn" disabled={isScraping}>
+                        {isScraping ? 'Searching...' : 'Search'}
+                    </button>
                 </form>
 
-                {/* Trending Tags */}
-                <div className="tags-row">
-                    <span className="tag-lbl">Popular:</span>
-                    {TRENDING.map((tag) => (
-                        <button
-                            key={tag}
-                            type="button"
-                            className="tag-chip"
-                            onClick={() => handleTag(tag)}
-                        >
-                            {tag}
-                        </button>
-                    ))}
-                </div>
+                {/* APIFY LOADING NOTIFICATION */}
+                {isScraping && (
+                    <div className="mb-6 p-4 bg-[#ECFDF5] text-[#047857] rounded-lg flex items-center justify-center gap-3 border border-[#10B981] shadow-sm w-full max-w-[640px]">
+                        <Loader2 className="animate-spin h-5 w-5" />
+                        <p className="text-sm font-medium text-left m-0">
+                            Deploying Apify scrapers for &quot;{activeSearch}&quot;... <br/>
+                            <span className="text-xs text-[#047857]/80 font-normal">This usually takes 30-60 seconds. Do not refresh.</span>
+                        </p>
+                    </div>
+                )}
+
+                {/* Trending Tags (Hide when scraping) */}
+                {!isScraping && (
+                    <div className="tags-row">
+                        <span className="tag-lbl">Popular:</span>
+                        {TRENDING.map((tag) => (
+                            <button
+                                key={tag}
+                                type="button"
+                                className="tag-chip"
+                                onClick={() => handleTag(tag)}
+                            >
+                                {tag}
+                            </button>
+                        ))}
+                    </div>
+                )}
             </section>
 
-            {/* 2. How it works Section */}
-            <section className="how-section" id="how">
-                <h2 className="how-h2">How it works</h2>
-                <div className="how-grid">
-                    {HOW_IT_WORKS.map((item) => (
-                        <div key={item.step} className="how-card">
-                            <div className="how-icon">
-                                {item.icon}
-                            </div>
-                            <h3 className="how-step">{item.step}</h3>
-                            <p className="how-desc">{item.desc}</p>
-                        </div>
-                    ))}
-                </div>
-            </section>
-
-            {/* 3. 3D Scroll Hero Section (Product Preview) */}
+            {/* 2. 3D Scroll Hero Section (Product Preview) */}
             <div className="flex flex-col overflow-hidden pb-[100px] pt-[20px]">
                 <ContainerScroll
                     titleComponent={
@@ -527,7 +476,7 @@ export default function HomePage() {
                 </ContainerScroll>
             </div>
 
-            {/* 4. Footer */}
+            {/* 3. Footer */}
             <footer className="sb-footer">
                 <div className="sb-footer-left">
                     <div className="sb-footer-brand">SmartBudol</div>
